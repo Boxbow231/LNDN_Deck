@@ -1,0 +1,228 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((app) => {
+  const collection = new Collection({
+    "createRule": "",
+    "deleteRule": null,
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "help": "",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Identifiant unique de carte (ex. 0RB01)",
+        "hidden": false,
+        "id": "text1037509321",
+        "max": 0,
+        "min": 0,
+        "name": "cote",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Nom de la carte",
+        "hidden": false,
+        "id": "text1819170229",
+        "max": 0,
+        "min": 0,
+        "name": "nom",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Nom de la zone de départ/apparition",
+        "hidden": false,
+        "id": "text2699804679",
+        "max": 0,
+        "min": 0,
+        "name": "zone",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "help": "Nombre d'exemplaires",
+        "hidden": false,
+        "id": "number1593326738",
+        "max": null,
+        "min": null,
+        "name": "exemplaire",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Description des effets en jeu",
+        "hidden": false,
+        "id": "text2315598506",
+        "max": 0,
+        "min": 0,
+        "name": "effet",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Texte de lore / citation",
+        "hidden": false,
+        "id": "text1389975214",
+        "max": 0,
+        "min": 0,
+        "name": "texte_ambiance",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "help": "Valeur de la carte",
+        "hidden": false,
+        "id": "number457493841",
+        "max": null,
+        "min": null,
+        "name": "valeur",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "help": "Prix standard",
+        "hidden": false,
+        "id": "number4159695454",
+        "max": null,
+        "min": null,
+        "name": "prix",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "help": "pris d'achat à la foire",
+        "hidden": false,
+        "id": "number3069946160",
+        "max": null,
+        "min": null,
+        "name": "prix_achat_foire",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Type principal (assaut, soin, etc.)",
+        "hidden": false,
+        "id": "text2363381545",
+        "max": 0,
+        "min": 0,
+        "name": "type",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "Type secondaire si présent",
+        "hidden": false,
+        "id": "text90494342",
+        "max": 0,
+        "min": 0,
+        "name": "type_2",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "help": "points de vie",
+        "hidden": false,
+        "id": "number3615538944",
+        "max": null,
+        "min": null,
+        "name": "pv",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "hidden": false,
+        "id": "autodate2990389176",
+        "name": "created",
+        "onCreate": true,
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "id": "autodate3332085495",
+        "name": "updated",
+        "onCreate": true,
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      }
+    ],
+    "id": "pbc_3153299511",
+    "indexes": [],
+    "listRule": null,
+    "name": "cartes_butins",
+    "system": false,
+    "type": "base",
+    "updateRule": null,
+    "viewRule": null
+  });
+
+  return app.save(collection);
+}, (app) => {
+  const collection = app.findCollectionByNameOrId("pbc_3153299511");
+
+  return app.delete(collection);
+})
