@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Nominés du Néombre - Inscription</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="auth-container">
+        <div class="logo-container">
+            <a href="https://lesnominesduneombre.fr" target="_blank" rel="noopener noreferrer">
+                <img src="image/logo_nomines.jpg" alt="Les Nominés du Néombre" class="game-logo">
+            </a>
+        </div>
+
+        <section id="register-section">
+            <h2>Créer un compte</h2>
+            <form id="register-form" action="connexion.html">
+                <div class="form-group">
+                    <label for="reg-pseudo">Pseudo</label>
+                    <input type="text" id="reg-pseudo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-email">Adresse Email</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-password">Mot de passe (8 min.)</label>
+                    <input type="password" id="reg-password" minlength="8" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reg-passwordConfirm">Confirmer le mot de passe</label>
+                    <input type="password" id="reg-passwordConfirm" minlength="8" required>
+                </div>
+                
+                <button type="submit">S'inscrire</button>
+            </form>
+            <p>Déjà un joueur ? <a href="connexion.html">Se connecter</a></p>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
