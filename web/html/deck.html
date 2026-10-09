@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Nominés du Néombre - Gestion du Deck</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Disposition en 3 colonnes avec la sidebar */
+        .deck-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        .panel {
+            background-color: var(--fond-parchemin, #f4ecd8);
+            border: 2px solid var(--encre-noire, #1a1a1a);
+            border-radius: 4px;
+            padding: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            height: calc(85vh - 70px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .cards-scroll-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            padding-right: 0.4rem;
+            margin-top: 1rem;
+        }
+
+        /* Items de la liste de joueurs */
+        .player-item {
+            border: 1px solid var(--encre-noire, #2b2b2b);
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-item:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .player-item.active {
+            background: var(--encre-noire, #1a1a1a);
+            color: #f4ecd8;
+            font-weight: bold;
+        }
+
+        .player-item.active small {
+            color: #dcd0b8;
+        }
+
+        /* Items des cartes */
+        .card-item {
+            border: 1px solid var(--encre-noire, #2b2b2b);
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-details h4 {
+            margin: 0;
+            font-family: 'Cinzel', serif;
+            font-size: 0.95rem;
+        }
+
+        .card-details p {
+            margin: 0.2rem 0 0 0;
+            font-size: 0.82rem;
+            color: #333;
+        }
+
+        .card-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.35rem;
+            border-radius: 3px;
+            background-color: #333;
+            color: #fff;
+            margin-right: 0.3rem;
+        }
+
+        .btn-action {
+            width: auto;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            margin-top: 0;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background-color: #8b0000;
+            color: white;
+            border-color: #5a0000;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .deck-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .panel {
+                height: auto;
+                max-height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header style="text-align: center; margin-top: 1rem;">
+        <a href="accueil.html" style="text-decoration: none; color: inherit;">
+            <img src="../image/logo_nomines.jpg" alt="Logo" style="max-width: 160px;">
+        </a>
+        <h2 id="aventure-titre" style="font-family: 'Cinzel', serif; margin: 0.4rem 0 0.2rem 0;">Chargement de l'aventure…</h2>
+        <a href="accueil.html" style="font-size: 0.85rem;">← Retour aux aventures</a>
+    </header>
+
+    <main class="deck-layout">
+        <!-- 1. SIDEBAR : Joueurs de l'aventure -->
+        <aside class="panel">
+            <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.8rem 0;">Compagnons</h3>
+
+            <!-- Formulaire d'ajout d'un nouveau joueur -->
+            <form id="form-ajout-joueur" style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                <input type="text" id="nouveau-joueur-nom" placeholder="Nom du héros..." required style="padding: 0.4rem; font-size: 0.85rem;">
+                <button type="submit" class="btn-action" style="width: 100%;">+ Ajouter un joueur</button>
+            </form>
+
+            <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin-bottom: 0.4rem;">Sélectionnez un héros :</div>
+            <div id="joueurs-liste" class="cards-scroll-container" style="margin-top: 0;">
+                <p style="text-align: center; color: var(--gris-dessin);">Chargement…</p>
+            </div>
+        </aside>
+
+        <!-- 2. PANNEAU CENTRAL : Deck du joueur actif -->
+        <section class="panel">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <h3 style="font-family: 'Cinzel', serif; margin: 0;" id="deck-titre-joueur">Deck du Héros</h3>
+                <span id="deck-count" style="font-size: 0.85rem; font-weight: bold;">0 cartes</span>
+            </div>
+            <div id="deck-cartes-liste" class="cards-scroll-container">
+                <p style="text-align: center; font-style: italic;">Sélectionnez un joueur pour voir son deck.</p>
+            </div>
+        </section>
+
+        <!-- 3. PANNEAU DROIT : Catalogue des Cartes Butins -->
+        <section class="panel">
+            <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.8rem 0;">Catalogue des Butins</h3>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Rechercher (nom, effet, zone)..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
+            </div>
+            <div id="catalogue-cartes-liste" class="cards-scroll-container">
+                <p style="text-align: center; color: var(--gris-dessin);">Chargement du catalogue…</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- PocketBase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/deck.js"></script>
+</body>
+</html>
