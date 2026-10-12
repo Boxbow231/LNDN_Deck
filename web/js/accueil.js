@@ -12,6 +12,13 @@ const DECK_DE_BASE = [
 async function chargerAventures() {
     if (!pb.authStore.isValid) return;
 
+    // Afficher le nom de l'utilisateur en haut à gauche
+    const userGreetingEl = document.getElementById('user-greeting');
+    if (userGreetingEl && pb.authStore.model) {
+        const nomJoueur = pb.authStore.model.username || pb.authStore.model.name || 'Héros';
+        userGreetingEl.innerHTML = `👤 ${nomJoueur}`;
+    }
+    
     try {
         const userId = pb.authStore.model.id;
         

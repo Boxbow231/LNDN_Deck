@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Amis - Les Nominés du Néombre</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Script PocketBase -->
+    
+</head>
+<body>
+    <div class="container" style="max-width: 900px; margin: 3rem auto; padding: 3rem; background-color: var(--fond-parchemin, #f4ecd8); border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
+        
+        <!-- EN-TÊTE -->
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-family: 'Cinzel', serif; font-size: 2.5rem; margin-bottom: 1rem;">Mes Compagnons</h1>
+            <a href="accueil.html" class="btn-action" style="text-decoration: none; padding: 0.5rem 1rem;">⬅ Retour à l'accueil</a>
+        </header>
+
+        <div id="user-greeting" style="position: absolute; top: 1.2rem; left: 1.2rem; font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem; color: var(--encre-noire);">
+            <!-- Le nom sera injecté ici par JavaScript -->
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            
+            <!-- COLONNE GAUCHE : Recherche et Demandes -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Zone de recherche -->
+                <section class="panel">
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 1.2rem; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem;">Trouver un joueur</h2>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <input type="text" id="recherche-pseudo" placeholder="Rechercher un pseudo..." style="flex: 1; padding: 0.5rem; font-family: inherit;">
+                        <button type="button" class="btn-action" id="btn-rechercher" style="padding: 0.5rem 1rem;">Chercher</button>
+                    </div>
+                    <div id="resultats-recherche" style="margin-top: 1rem;"></div>
+                </section>
+
+                <!-- Zone des requêtes en attente -->
+                <section class="panel">
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 1.2rem; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem;">Demandes reçues</h2>
+                    <div id="demandes-liste" style="margin-top: 1rem;">
+                        <p style="text-align: center; font-style: italic; color: #666;">Aucune demande en attente.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- COLONNE DROITE : Liste d'amis -->
+            <div>
+                <section class="panel" style="height: 100%;">
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 1.2rem; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem;">Ma liste d'amis</h2>
+                    <div id="amis-liste" style="margin-top: 1rem;">
+                        <p style="text-align: center; font-style: italic; color: #666;">Vous n'avez pas encore d'amis.</p>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script PocketBase D'ABORD, puis ton script -->
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
+    <script src="../js/amis.js"></script>
+</body>
+</body>
+</html>
