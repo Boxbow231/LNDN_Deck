@@ -208,3 +208,73 @@ a:hover {
 .btn-icon:active {
     transform: translateY(0);
 }
+
+/* Menu contextuel à 3 points */
+.action-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-dots {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.2rem 0.6rem;
+    line-height: 1;
+    color: var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.btn-dots:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--fond-parchemin, #f4ecd8);
+    border: 1px solid var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    min-width: 140px;
+    z-index: 100;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-item {
+    padding: 0.6rem 1rem;
+    text-align: left;
+    background: transparent;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--encre-noire);
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+}
+
+.dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-item.danger {
+    color: #8b0000;
+}
+
+.dropdown-item.danger:hover {
+    background: rgba(139, 0, 0, 0.1);
+}

@@ -164,8 +164,18 @@
                 <h3 style="font-family: 'Cinzel', serif; margin: 0;" id="deck-titre-joueur">Deck du Héros</h3>
                 <span id="deck-count" style="font-size: 0.85rem; font-weight: bold;">0 cartes</span>
             </div>
+            
+            <div class="search-box" style="margin-top: 0.8rem;">
+                <input type="text" id="search-deck-input" placeholder="Rechercher dans ce deck (nom, zone, effet)..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
+            </div>
+
             <div id="deck-cartes-liste" class="cards-scroll-container">
                 <p style="text-align: center; font-style: italic;">Sélectionnez un joueur pour voir son deck.</p>
+            </div>
+
+            <div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 2px solid var(--encre-noire); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem;">Valeur du deck :</span>
+                <span id="deck-valeur-totale" style="font-weight: bold; font-size: 1.2rem; color: #8b0000;">0</span>
             </div>
         </section>
 
