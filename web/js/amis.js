@@ -42,28 +42,42 @@ btnRechercher.addEventListener('click', async () => {
     try {
         const userId = getUserId();
         
-        // 1. On récupère TOUS les joueurs sans aucun filtre (PocketBase ne peut pas refuser ça)
+        // A. On récupère TOUS les joueurs
         const tousLesUsers = await pb.collection('users').getFullList();
         
-        // 2. On filtre nous-mêmes en JavaScript
+        // B. NOUVEAU : On récupère toutes nos relations (amis + demandes en attente)
+        const mesRelations = await pb.collection('amis').getFullList({
+            filter: `demandeur = "${userId}" || receveur = "${userId}"`
+        });
+
+        // C. On filtre les joueurs
         const joueursTrouves = tousLesUsers.filter(user => {
             if (user.id === userId) return false; // On s'exclut soi-même
             
-            // On vérifie si le texte tapé correspond au username ou au name
+            // On vérifie si le texte tapé correspond
             const pseudo = (user.username || '').toLowerCase();
             const nom = (user.name || '').toLowerCase();
+            if (!pseudo.includes(query) && !nom.includes(query)) return false;
+
+            // NOUVEAU : On vérifie si on est déjà en relation avec ce joueur
+            const dejaEnRelation = mesRelations.find(rel => 
+                rel.demandeur === user.id || rel.receveur === user.id
+            );
             
-            return pseudo.includes(query) || nom.includes(query);
+            // Si on est déjà en relation (ami ou en attente), on le cache de la recherche !
+            if (dejaEnRelation) return false;
+
+            return true; // Si tout est bon, on le garde
         });
 
         resultatsRecherche.innerHTML = '';
 
         if (joueursTrouves.length === 0) {
-            resultatsRecherche.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Aucun joueur trouvé.</p>';
+            resultatsRecherche.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Aucun nouveau joueur trouvé ou vous êtes déjà amis.</p>';
             return;
         }
 
-        // 3. On affiche les résultats (limité aux 10 premiers pour ne pas surcharger la page)
+        // D. On affiche les résultats filtrés
         joueursTrouves.slice(0, 10).forEach(user => {
             const div = document.createElement('div');
             div.className = 'player-item';
@@ -73,15 +87,15 @@ btnRechercher.addEventListener('click', async () => {
             div.style.marginTop = '0.5rem';
             
             div.innerHTML = `
-                <strong>${user.username || user.name || 'Héros anonyme'}</strong>
-                <button type="button" class="btn-action" onclick="ajouterAmi('${user.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">+ Ajouter</button>
+                <strong style="font-size: 1.2rem; font-family: 'Cinzel', serif;">${user.username || user.name || 'Héros anonyme'}</strong>
+                <button type="button" class="btn-action" onclick="ajouterAmi('${user.id}')" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; width: auto; min-width: 100px;">+ Ajouter</button>
             `;
             resultatsRecherche.appendChild(div);
         });
 
     } catch (err) {
         console.error("Erreur détaillée :", err);
-        resultatsRecherche.innerHTML = '<p style="color: red; text-align: center;">Erreur de connexion à la base.</p>';
+        resultatsRecherche.innerHTML = '<p style="color: red; text-align: center;">Erreur de recherche.</p>';
     }
 });
 
@@ -132,7 +146,6 @@ async function chargerDemandes() {
             expand: 'demandeur'
         });
 
-        // On filtre manuellement les requêtes en attente nous concernant
         const mesDemandes = toutesRelations.filter(rel => rel.receveur === userId && rel.statut === 'attente');
 
         demandesListe.innerHTML = '';
@@ -144,9 +157,11 @@ async function chargerDemandes() {
 
         mesDemandes.forEach(demande => {
             const demandeur = demande.expand?.demandeur;
-            if (!demandeur) return; // Sécurité anti-crash
+            if (!demandeur) return; 
 
             const div = document.createElement('div');
+            // NOUVEAU : On donne un ID unique à cette ligne pour pouvoir la cibler et la supprimer instantanément
+            div.id = `demande-${demande.id}`;
             div.className = 'player-item';
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
@@ -154,10 +169,10 @@ async function chargerDemandes() {
             div.style.marginTop = '0.5rem';
 
             div.innerHTML = `
-                <strong>${demandeur.username || demandeur.name || 'Héros inconnu'}</strong>
+                <strong style="font-size: 1.2rem; font-family: 'Cinzel', serif;">${demandeur.username || demandeur.name || 'Héros inconnu'}</strong>
                 <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn-action" onclick="accepterDemande('${demande.id}')" style="padding: 0.3rem 0.5rem; background-color: #2e8b57; border-color: #2e8b57; font-size: 0.85rem;">✔</button>
-                    <button class="btn-action btn-danger" onclick="refuserDemande('${demande.id}')" style="padding: 0.3rem 0.5rem; font-size: 0.85rem;">✖</button>
+                    <button class="btn-action" onclick="accepterDemande('${demande.id}')" style="padding: 0.3rem 0.6rem; background-color: #2e8b57; border-color: #2e8b57; font-size: 0.8rem; width: auto;">✔</button>
+                    <button class="btn-action btn-danger" onclick="refuserDemande('${demande.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; width: auto;">✖</button>
                 </div>
             `;
             demandesListe.appendChild(div);
@@ -202,8 +217,8 @@ async function chargerAmis() {
             div.style.marginTop = '0.5rem';
 
             div.innerHTML = `
-                <strong>${ami.username || ami.name || 'Héros inconnu'}</strong>
-                <button class="btn-action btn-danger" onclick="supprimerAmi('${rel.id}')" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Retirer</button>
+                <strong style="font-size: 1.2rem; font-family: 'Cinzel', serif;">${ami.username || ami.name || 'Héros inconnu'}</strong>
+                <button class="btn-action btn-danger" onclick="supprimerAmi('${rel.id}')" style="padding: 0.3rem 0.8rem; font-size: 0.8rem; width: auto; min-width: 100px;">Retirer</button>
             `;
             amisListe.appendChild(div);
         });
@@ -214,32 +229,40 @@ async function chargerAmis() {
 
 // 5. Actions : Accepter, Refuser, Supprimer
 window.accepterDemande = async function(idAmiTable) {
+    // 1. EFFET VISUEL IMMÉDIAT : on supprime la ligne de l'écran instantanément
+    const ligne = document.getElementById(`demande-${idAmiTable}`);
+    if (ligne) ligne.remove();
+
+    // S'il n'y a plus de demandes affichées, on remet le texte par défaut
+    if (demandesListe.children.length === 0) {
+        demandesListe.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Aucune demande en attente.</p>';
+    }
+
+    // 2. Traitement en arrière-plan
     try {
         await pb.collection('amis').update(idAmiTable, { statut: 'accepte' });
-        chargerDemandes();
+        // On rafraîchit la liste d'amis à droite pour voir le nouveau compagnon apparaître
         chargerAmis();
     } catch (err) {
         console.error(err);
+        chargerDemandes(); // Si erreur réseau, on recharge la liste pour annuler l'effet visuel
     }
 }
 
 window.refuserDemande = async function(idAmiTable) {
+    // EFFET VISUEL IMMÉDIAT
+    const ligne = document.getElementById(`demande-${idAmiTable}`);
+    if (ligne) ligne.remove();
+
+    if (demandesListe.children.length === 0) {
+        demandesListe.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Aucune demande en attente.</p>';
+    }
+
     try {
         await pb.collection('amis').delete(idAmiTable);
-        chargerDemandes();
     } catch (err) {
         console.error(err);
-    }
-}
-
-window.supprimerAmi = async function(idAmiTable) {
-    if(confirm("Es-tu sûr de vouloir retirer ce joueur de tes amis ?")) {
-        try {
-            await pb.collection('amis').delete(idAmiTable);
-            chargerAmis();
-        } catch (err) {
-            console.error(err);
-        }
+        chargerDemandes();
     }
 }
 
