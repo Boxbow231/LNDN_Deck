@@ -1,1 +1,7 @@
-pocketbase_0.40.4_windows_amd64/pb_data/
+# Ignorer les données SQLite et uploads de PocketBase
+**/pb_data/
+pocketbase_*/pb_data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
