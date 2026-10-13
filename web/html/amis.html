@@ -10,18 +10,37 @@
     
 </head>
 <body>
-    <div class="container" style="max-width: 900px; margin: 3rem auto; padding: 3rem; background-color: var(--fond-parchemin, #f4ecd8); border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative;">
-        
-        <!-- EN-TÊTE -->
-        <header style="text-align: center; margin-bottom: 2rem;">
-            <h1 style="font-family: 'Cinzel', serif; font-size: 2.5rem; margin-bottom: 1rem;">Mes Compagnons</h1>
-            <a href="accueil.html" class="btn-action" style="text-decoration: none; padding: 0.5rem 1rem;">⬅ Retour à l'accueil</a>
-        </header>
+    <!-- BANNIÈRE HORIZONTALE EN HAUT (Sortie du container !) -->
+    <header class="deck-header">
+        <!-- Logo à gauche -->
+        <a href="accueil.html" class="header-logo-link">
+            <img src="../image/logo_nomines.jpg" alt="Logo">
+        </a>
 
-        <div id="user-greeting" style="position: absolute; top: 1.2rem; left: 1.2rem; font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem; color: var(--encre-noire);">
-            <!-- Le nom sera injecté ici par JavaScript -->
+        <!-- Titre au centre -->
+        <h2 id="aventure-titre">
+            Gestion des Compagnons
+        </h2>
+
+        <!-- Bouton Retour à droite -->
+        <div class="header-action">
+            <a href="accueil.html" class="btn-action btn-danger">
+                🚪 Retour à l'accueil
+            </a>
         </div>
+    </header>
 
+    <!-- Affichage du Pseudo (Juste sous la barre) -->
+    <div style="text-align: center; margin-top: 1rem;">
+        <span id="user-greeting" style="font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem; color: var(--encre-noire); background: rgba(255,255,255,0.5); padding: 0.4rem 1rem; border-radius: 4px; border: 1px solid var(--encre-noire);">
+            <!-- Le nom sera injecté ici par JavaScript -->
+        </span>
+    </div>
+
+    <!-- CONTENEUR PRINCIPAL DES AMIS -->
+    <!-- J'ai enlevé les styles en ligne forcés (padding 3rem, etc.) pour laisser le CSS gérer le mobile -->
+    <main class="container" style="max-width: 900px; margin: 1.5rem auto; background-color: transparent; border: none; box-shadow: none;">
+        
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             
             <!-- COLONNE GAUCHE : Recherche et Demandes -->
@@ -58,7 +77,11 @@
 
         </div>
     </div>
-
+    <!-- PIED DE PAGE (FOOTER) -->
+    <footer class="game-footer">
+        <p>Créateurs du jeu : @Antoine Poullin & @Pierre Cailloux</p>
+        <p>Développeur : @Aurélien GIGUERRE</p>
+    </footer>
     <!-- Script PocketBase D'ABORD, puis ton script -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
     <script src="../js/amis.js"></script>

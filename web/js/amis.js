@@ -266,4 +266,20 @@ window.refuserDemande = async function(idAmiTable) {
     }
 }
 
+window.supprimerAmi = async function(idAmiTable) {
+    const confirmation = confirm("Êtes-vous sûr de vouloir retirer ce compagnon de votre liste d'amis ?");
+    if (!confirmation) return;
+
+    try {
+        // On supprime la relation d'amitié dans la base de données
+        await pb.collection('amis').delete(idAmiTable);
+        
+        // On recharge la liste pour faire disparaître l'ami de l'écran
+        chargerAmis();
+    } catch (err) {
+        console.error("Erreur lors de la suppression de l'ami :", err);
+        alert("Impossible de retirer cet ami.");
+    }
+}
+
 initialiserPage();

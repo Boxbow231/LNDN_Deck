@@ -13,6 +13,11 @@ const DECK_DE_BASE = [
 // 1. CHARGEMENT DES AVENTURES (Créateur + Invité)
 // ==========================================
 async function chargerAventures() {
+    // Afficher le nom de l'utilisateur dans le bouton Mon Compte
+    const spanPseudo = document.getElementById('compte-pseudo');
+    if (spanPseudo && pb.authStore.model) {
+        spanPseudo.textContent = pb.authStore.model.username || pb.authStore.model.name || 'Héros';
+    }
     if (!pb.authStore.isValid) return;
 
     const userGreetingEl = document.getElementById('user-greeting');
@@ -313,6 +318,111 @@ if (createForm) {
         } catch (err) {
             console.error('Erreur création aventure :', err);
             alert("Erreur lors de la création de l'aventure.");
+        }
+    });
+}
+
+// ==========================================
+// 5. GESTION DU PROFIL (MON COMPTE)
+// ==========================================
+const btnMonCompte = document.getElementById('btn-mon-compte');
+const modalCompte = document.getElementById('modal-compte');
+const fermerModalCompte = document.getElementById('fermer-modal-compte');
+const formMonCompte = document.getElementById('form-mon-compte');
+
+// Ouvrir la fenêtre et pré-remplir les données actuelles
+if (btnMonCompte) {
+    btnMonCompte.addEventListener('click', () => {
+        document.getElementById('compte-new-pseudo').value = pb.authStore.model.username || pb.authStore.model.name || '';
+        document.getElementById('compte-new-email').value = pb.authStore.model.email || '';
+        
+        document.getElementById('compte-new-mdp').value = '';
+        document.getElementById('compte-new-mdp-confirm').value = '';
+        document.getElementById('compte-old-mdp').value = '';
+        
+        modalCompte.style.display = 'flex';
+    });
+}
+
+// Fermer la fenêtre
+if (fermerModalCompte) {
+    fermerModalCompte.addEventListener('click', () => {
+        modalCompte.style.display = 'none';
+    });
+}
+
+// Validation du formulaire de modification
+if (formMonCompte) {
+    formMonCompte.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const newPseudo = document.getElementById('compte-new-pseudo').value.trim();
+        const newMdp = document.getElementById('compte-new-mdp').value;
+        const newMdpConfirm = document.getElementById('compte-new-mdp-confirm').value;
+        const oldMdp = document.getElementById('compte-old-mdp').value;
+
+        // 1. On prépare la mise à jour SANS l'e-mail
+        let updateData = {
+            "username": newPseudo,
+            "name": newPseudo
+        };
+
+        // 2. Gestion du mot de passe
+        if (newMdp) {
+            if (newMdp !== newMdpConfirm) {
+                alert("Les nouveaux mots de passe ne correspondent pas !");
+                return;
+            }
+            if (!oldMdp) {
+                alert("Vous devez renseigner votre ancien mot de passe pour le modifier !");
+                return;
+            }
+            updateData.oldPassword = oldMdp;
+            updateData.password = newMdp;
+            updateData.passwordConfirm = newMdpConfirm;
+        }
+
+        try {
+            // 3. Vérification si le pseudo est déjà pris
+            if (newPseudo !== pb.authStore.model.username) {
+                try {
+                    const verification = await pb.collection('users').getFirstListItem(`(username = "${newPseudo}" || name = "${newPseudo}") && id != "${pb.authStore.model.id}"`);
+                    if (verification) {
+                        alert("Ce pseudo est déjà pris par un autre joueur.");
+                        return; 
+                    }
+                } catch (err) {} // 404 = Parfait, le pseudo est libre !
+            }
+
+            // 4. Mise à jour du profil (Pseudo et Mot de passe uniquement)
+            await pb.collection('users').update(pb.authStore.model.id, updateData);
+            
+            alert("Profil mis à jour avec succès !");
+            
+            // Mise à jour de l'affichage local
+            const spanPseudo = document.getElementById('compte-pseudo');
+            if (spanPseudo) spanPseudo.textContent = newPseudo;
+            pb.authStore.model.username = newPseudo;
+            pb.authStore.model.name = newPseudo;
+            
+            // On vide les champs de mot de passe
+            document.getElementById('compte-new-mdp').value = '';
+            document.getElementById('compte-new-mdp-confirm').value = '';
+            document.getElementById('compte-old-mdp').value = '';
+
+            modalCompte.style.display = 'none';
+            
+        } catch (err) {
+            console.error("Erreur détaillée de PocketBase :", err);
+            let messageErreur = "Erreur lors de la mise à jour.";
+            
+            if (err.response && err.response.message) {
+                messageErreur += " " + err.response.message;
+            } else if (err.message) {
+                messageErreur += " " + err.message;
+            }
+
+            alert(messageErreur);
         }
     });
 }
