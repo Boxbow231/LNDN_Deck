@@ -11,6 +11,7 @@ let listeJoueurs = [];
 let joueurActif = null;
 let deckRecordActif = null;
 let cartesDuDeck = [];
+let compteCartesUtilisees = {};
 
 const DECK_DE_BASE = [
     "D1B10", "D1B03", "D1B12", "D1B12", "D1B01", 
@@ -37,6 +38,26 @@ const modalInvitation = document.getElementById('modal-invitation');
 const listeAmisInvitation = document.getElementById('liste-amis-invitation');
 const btnFermerModal = document.getElementById('fermer-modal-invitation');
 
+// Fonction pour compter les cartes utilisées dans TOUS les decks de l'aventure
+async function majCompteCartes() {
+    compteCartesUtilisees = {};
+    if (listeJoueurs.length === 0) return;
+    
+    const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
+    try {
+        const decks = await pb.collection('decks').getFullList({ filter: filtres });
+        decks.forEach(d => {
+            if (d.cartes && Array.isArray(d.cartes)) {
+                d.cartes.forEach(cote => {
+                    compteCartesUtilisees[cote] = (compteCartesUtilisees[cote] || 0) + 1;
+                });
+            }
+        });
+    } catch(err) {
+        console.error("Erreur lors du calcul des cartes disponibles :", err);
+    }
+}
+
 async function initialiserPage() {
     if (!pb.authStore.isValid) {
         window.location.href = "connexion.html";
@@ -56,14 +77,17 @@ async function initialiserPage() {
         const aventure = await pb.collection('aventures').getOne(aventureId);
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
 
-        // Étape 2 : Charger le catalogue complet
+        // Étape 2 : Charger le catalogue complet (sans l'afficher tout de suite)
         toutesLesCartes = await pb.collection('cartes_butins').getFullList({
             sort: 'cote'
         });
-        afficherCatalogue(toutesLesCartes);
 
         // Étape 3 : Charger tous les joueurs
         await chargerJoueurs(userId);
+        
+        // Étape 4 : Calculer les disponibilités et afficher le catalogue
+        await majCompteCartes();
+        afficherCatalogue(toutesLesCartes);
 
     } catch (err) {
         console.error("Erreur d'initialisation :", err);
@@ -448,15 +472,29 @@ function afficherCatalogue(liste) {
     }
 
     liste.forEach(carte => {
+        // Calcul de la disponibilité
+        const limite = parseInt(carte.exemplaire) || 1;
+        const utilisees = compteCartesUtilisees[carte.cote] || 0;
+        const dispo = limite - utilisees;
+        
+        // Style conditionnel selon le stock
+        const btnDisabled = dispo <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+        const texteDispo = dispo > 0 
+            ? `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>` 
+            : `<span style="color: #8b0000; font-weight: bold;">0/${limite} dispo</span>`;
+
         const item = document.createElement('div');
         item.className = 'card-item';
         item.innerHTML = `
-            <div class="card-details">
+            <div class="card-details" style="width: 100%;">
                 <h4><span class="card-badge">${carte.cote}</span> ${carte.nom}</h4>
                 <p><strong>Effet :</strong> ${carte.effet || 'Aucun'}</p>
-                <p><small style="color: #666;">Zone : ${carte.zone || 'Inconnue'} | Type : ${carte.type || '-'}</small></p>
+                <p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+                    <small style="color: #666;">Zone : ${carte.zone || 'Inconnue'} | Type : ${carte.type || '-'}</small>
+                    <small>${texteDispo}</small>
+                </p>
             </div>
-            <button type="button" class="btn-action" onclick="ajouterAuDeck('${carte.cote}')">
+            <button type="button" class="btn-action" onclick="ajouterAuDeck('${carte.cote}')" ${btnDisabled}>
                 + Ajouter
             </button>
         `;
@@ -468,7 +506,16 @@ function afficherCatalogue(liste) {
 // ACTIONS D'AJOUT ET SAUVEGARDE
 // ==========================================
 
-// Ajouter une carte au deck du joueur actif
+// Petite fonction utilitaire pour rafraîchir le catalogue (en respectant la barre de recherche)
+function rafraichirCatalogueAffichage() {
+    const query = searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '';
+    if (query) {
+        searchInput.dispatchEvent(new Event('input'));
+    } else {
+        afficherCatalogue(toutesLesCartes);
+    }
+}
+
 async function ajouterAuDeck(cote) {
     if (!deckRecordActif) {
         alert("Veuillez sélectionner un joueur d'abord.");
@@ -478,41 +525,39 @@ async function ajouterAuDeck(cote) {
     const carteTrouvee = toutesLesCartes.find(c => c.cote === cote);
     if (!carteTrouvee) return;
 
-    // Récupérer la limite d'exemplaires (on s'assure que c'est un nombre)
     const limite = parseInt(carteTrouvee.exemplaire) || 1;
+    const utilisees = compteCartesUtilisees[cote] || 0;
 
-    try {
-        const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
-        let totalEnJeu = 0;
-        
-        if (filtres) {
-            const tousLesDecks = await pb.collection('decks').getFullList({ filter: filtres });
-            tousLesDecks.forEach(d => {
-                if (d.cartes && Array.isArray(d.cartes)) {
-                    totalEnJeu += d.cartes.filter(c => c === cote).length;
-                }
-            });
-        }
-
-        // Bloquer si la limite d'exemplaires de l'aventure est atteinte
-        if (totalEnJeu >= limite) {
-            alert(`Limite atteinte pour "${carteTrouvee.nom}" !\n\nCette carte est limitée à ${limite} exemplaire(s) partagé(s) entre tous les héros de cette aventure.`);
-            return; 
-        }
-    } catch (err) {
-        console.error("Erreur lors de la vérification de la limite :", err);
+    if (utilisees >= limite) {
+        alert(`Limite atteinte pour "${carteTrouvee.nom}" !\n\nCette carte est limitée à ${limite} exemplaire(s) partagé(s) entre tous les héros de cette aventure.`);
         return; 
     }
 
+    // Ajout au deck
     cartesDuDeck.push(carteTrouvee);
+    
+    // Mise à jour immédiate et rafraîchissement
+    compteCartesUtilisees[cote] = utilisees + 1;
     afficherDeck();
+    rafraichirCatalogueAffichage();
+    
     await sauvegarderDeck();
 }
 
 async function retirerDuDeck(index) {
     if (!deckRecordActif) return;
+    
+    const carteRetiree = cartesDuDeck[index];
     cartesDuDeck.splice(index, 1);
+    
+    // Mise à jour immédiate et rafraîchissement
+    if (carteRetiree && compteCartesUtilisees[carteRetiree.cote]) {
+        compteCartesUtilisees[carteRetiree.cote]--;
+    }
+
     afficherDeck();
+    rafraichirCatalogueAffichage();
+    
     await sauvegarderDeck();
 }
 
