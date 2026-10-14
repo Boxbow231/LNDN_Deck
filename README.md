@@ -50,7 +50,14 @@ Si vous souhaitez faire tourner ce projet sur votre machine :
      ```
      const pb = new PocketBase('http://127.0.0.1:8090');
      ```
-4. **Lancement :**
+
+4. **Importation des données (Catalogue des cartes) :**
+
+Avant le tout premier lancement de l'application, il est nécessaire de peupler la base de données avec les butins du jeu. Exécutez le script Python prévu à cet effet :
+
+Bash
+python python/import_butins.py
+5. **Lancement :**
 
    * Ouvrez le dossier du projet avec VS Code et utilisez l'extension **Live Server** pour lancer le frontend.
 
