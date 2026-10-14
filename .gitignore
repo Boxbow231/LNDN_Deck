@@ -5,3 +5,4 @@ pocketbase_*/pb_data/
 *.db-journal
 *.db-wal
 *.db-shm
+utiliser.txt*
