@@ -1,5 +1,6 @@
 const deckValeurTotaleEl = document.getElementById('deck-valeur-totale');
 const searchDeckInput = document.getElementById('search-deck-input');
+
 // 1. Récupération des paramètres d'URL
 const urlParams = new URLSearchParams(window.location.search);
 const aventureId = urlParams.get('aventure');
@@ -17,11 +18,7 @@ const DECK_DE_BASE = [
     "D1B04", "D1B11", "D1B11", "D1B02", "D1B09"
 ];
 
-<<<<<<< HEAD
-// 3. Éléments DOM
-=======
 // 3. Éléments DOM classiques
->>>>>>> featurehtml
 const titreAventureEl = document.getElementById('aventure-titre');
 const joueursListeEl = document.getElementById('joueurs-liste');
 const formAjoutJoueur = document.getElementById('form-ajout-joueur');
@@ -75,8 +72,6 @@ async function initialiserPage() {
 }
 
 // ==========================================
-<<<<<<< HEAD
-=======
 // GESTION DES INVITATIONS D'AMIS
 // ==========================================
 if (btnInviter) {
@@ -103,7 +98,7 @@ async function chargerAmisPourInvitation() {
 
         const idsDejaPresents = listeJoueurs.map(j => j.utilisateur); 
 
-        // NOUVEAU : Récupérer les invitations déjà envoyées pour ne pas spammer
+        // Récupérer les invitations déjà envoyées pour ne pas spammer
         const invitationsEnAttente = await pb.collection('invitations_aventures').getFullList({
             filter: `aventure = "${aventureId}"`
         });
@@ -122,7 +117,6 @@ async function chargerAmisPourInvitation() {
 
             const estDejaDansLaventure = idsDejaPresents.includes(ami.id);
             const estDejaInvite = idsInvites.includes(ami.id);
-            const nomAmiSafe = (ami.username || ami.name || 'Héros').replace(/'/g, "\\'");
 
             const div = document.createElement('div');
             div.style.display = 'flex';
@@ -164,7 +158,7 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
     try {
         const userId = pb.authStore.model.id;
 
-        // On crée une invitation d'aventure (et non plus un joueur direct)
+        // On crée une invitation d'aventure
         await pb.collection('invitations_aventures').create({
             aventure: aventureId,
             demandeur: userId,
@@ -184,7 +178,6 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
 }
 
 // ==========================================
->>>>>>> featurehtml
 // GESTION DES JOUEURS (SIDEBAR)
 // ==========================================
 
@@ -195,10 +188,7 @@ async function chargerJoueurs(userId) {
             sort: 'created'
         });
 
-<<<<<<< HEAD
-        // Si la liste est vide (ex: après suppression du dernier), on recrée un héros de base
-=======
->>>>>>> featurehtml
+        // Si la liste est vide, on recrée un héros de base
         if (listeJoueurs.length === 0) {
             const nomParDefaut = pb.authStore.model.name || 'Héros Principal';
             const nouveauJoueur = await pb.collection('joueurs').create({
@@ -215,10 +205,7 @@ async function chargerJoueurs(userId) {
             listeJoueurs = [nouveauJoueur];
         }
 
-<<<<<<< HEAD
         // Si le joueur actif précédent a été supprimé, on prend le premier de la liste
-=======
->>>>>>> featurehtml
         if (!joueurActif || !listeJoueurs.some(j => j.id === joueurActif.id)) {
             joueurActif = listeJoueurs[0];
         }
@@ -244,21 +231,13 @@ function afficherJoueurs() {
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
         
-<<<<<<< HEAD
         // Le clic sur la case sélectionne le joueur
-        div.onclick = () => selectionnerJoueur(joueur.id);
-
-        const nom = joueur.nom_provisoire || 'Héros sans nom';
-        const nomSafe = nom.replace(/'/g, "\\'"); // Sécurise les apostrophes pour le JS
-        
-        // Couleur du bouton et du texte selon si la ligne est active (noire) ou inactive (blanche)
-=======
         div.onclick = () => selectionnerJoueur(joueur.id);
 
         const nom = joueur.nom_provisoire || 'Héros sans nom';
         const nomSafe = nom.replace(/'/g, "\\'"); 
         
->>>>>>> featurehtml
+        // Couleur du bouton et du texte selon l'activation
         const btnColor = estActif ? '#f4ecd8' : 'var(--encre-noire)';
         const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour gérer';
 
@@ -268,10 +247,6 @@ function afficherJoueurs() {
                 <small style="font-size: 0.75rem;">${sousTexte}</small>
             </div>
             
-<<<<<<< HEAD
-            <!-- Menu 3 points -->
-=======
->>>>>>> featurehtml
             <div class="action-menu-container" style="margin-left: auto;">
                 <button type="button" class="btn-dots" style="color: ${btnColor}; padding: 0.2rem 0.5rem;" onclick="toggleMenuJoueur(event, '${joueur.id}')">⋮</button>
                 <div id="menu-joueur-${joueur.id}" class="dropdown-menu">
@@ -288,21 +263,6 @@ function afficherJoueurs() {
     });
 }
 
-<<<<<<< HEAD
-// Ouvrir/fermer le menu d'un joueur
-function toggleMenuJoueur(event, joueurId) {
-    event.stopPropagation(); // Empêche de sélectionner le joueur en cliquant sur les 3 points
-    
-    document.querySelectorAll('.dropdown-menu').forEach(m => {
-        if (m.id !== `menu-joueur-${joueurId}`) m.classList.remove('show');
-    });
-
-    const menu = document.getElementById(`menu-joueur-${joueurId}`);
-    if (menu) menu.classList.toggle('show');
-}
-
-// Fermer les menus si on clique ailleurs sur la page
-=======
 function toggleMenuJoueur(event, joueurId) {
     event.stopPropagation(); 
     document.querySelectorAll('.dropdown-menu').forEach(m => {
@@ -312,15 +272,10 @@ function toggleMenuJoueur(event, joueurId) {
     if (menu) menu.classList.toggle('show');
 }
 
->>>>>>> featurehtml
 window.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 });
 
-<<<<<<< HEAD
-// Modifier le nom d'un joueur
-=======
->>>>>>> featurehtml
 async function renommerJoueur(event, joueurId, ancienNom) {
     event.stopPropagation();
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
@@ -329,63 +284,17 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     if (!nouveauNom || nouveauNom.trim() === "" || nouveauNom.trim() === ancienNom) return;
 
     try {
-<<<<<<< HEAD
-        await pb.collection('joueurs').update(joueurId, {
-            nom_provisoire: nouveauNom.trim()
-        });
-
-        // Mettre à jour l'affichage local sans recharger toute la base
-=======
         await pb.collection('joueurs').update(joueurId, { nom_provisoire: nouveauNom.trim() });
->>>>>>> featurehtml
         const j = listeJoueurs.find(j => j.id === joueurId);
         if (j) j.nom_provisoire = nouveauNom.trim();
 
         if (joueurActif && joueurActif.id === joueurId) {
             deckTitreJoueurEl.textContent = `Deck : ${nouveauNom.trim()}`;
         }
-<<<<<<< HEAD
-
-=======
->>>>>>> featurehtml
         afficherJoueurs();
     } catch (err) {
         console.error("Erreur renommage :", err);
         alert("Impossible de renommer ce héros.");
-<<<<<<< HEAD
-    }
-}
-
-// Supprimer un joueur et son deck
-async function supprimerJoueur(event, joueurId, nom) {
-    event.stopPropagation();
-    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
-
-    const conf = confirm(`Es-tu sûr de vouloir retirer "${nom}" de l'aventure ? Son deck sera supprimé définitivement.`);
-    if (!conf) return;
-
-    try {
-        // 1. Trouver et supprimer tous ses decks
-        const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurId}"` });
-        for (const d of decks) {
-            await pb.collection('decks').delete(d.id);
-        }
-        
-        // 2. Supprimer le joueur
-        await pb.collection('joueurs').delete(joueurId);
-
-        // 3. Recharger la liste complète (qui gérera la sélection d'un autre joueur automatiquement)
-        const userId = pb.authStore.model.id;
-        await chargerJoueurs(userId);
-
-    } catch (err) {
-        console.error("Erreur suppression :", err);
-        alert("Erreur lors de la suppression du héros.");
-    }
-}
-
-// Ajouter un joueur depuis le formulaire
-=======
     }
 }
 
@@ -409,7 +318,6 @@ async function supprimerJoueur(event, joueurId, nom) {
     }
 }
 
->>>>>>> featurehtml
 if (formAjoutJoueur) {
     formAjoutJoueur.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -418,25 +326,13 @@ if (formAjoutJoueur) {
 
         try {
             const userId = pb.authStore.model.id;
-<<<<<<< HEAD
-
-=======
->>>>>>> featurehtml
             const nouveauJoueur = await pb.collection('joueurs').create({
                 aventure: aventureId,
                 utilisateur: userId,
                 nom_provisoire: nom
             });
 
-<<<<<<< HEAD
-            await pb.collection('decks').create({
-                joueur: nouveauJoueur.id,
-                cartes: DECK_DE_BASE
-            });
-
-=======
             await pb.collection('decks').create({ joueur: nouveauJoueur.id, cartes: DECK_DE_BASE });
->>>>>>> featurehtml
             nouveauJoueurInput.value = '';
             listeJoueurs.push(nouveauJoueur);
             afficherJoueurs();
@@ -459,22 +355,13 @@ async function selectionnerJoueur(joueurId) {
     if (deckTitreJoueurEl && joueurActif) {
         deckTitreJoueurEl.textContent = `Deck : ${joueurActif.nom_provisoire || 'Héros'}`;
     }
-<<<<<<< HEAD
-    if (searchDeckInput) {
-        searchDeckInput.value = ''; // On vide la recherche quand on change de héros
-    }
-=======
     if (searchDeckInput) searchDeckInput.value = ''; 
->>>>>>> featurehtml
 
     try {
         try {
             deckRecordActif = await pb.collection('decks').getFirstListItem(`joueur = "${joueurActif.id}"`);
         } catch (e) {
-<<<<<<< HEAD
-            // C'est ici que l'on intègre le deck de base au lieu d'un deck vide
-=======
->>>>>>> featurehtml
+            // Intégration du deck de base au lieu d'un deck vide
             deckRecordActif = await pb.collection('decks').create({
                 joueur: joueurActif.id,
                 cartes: DECK_DE_BASE
@@ -487,10 +374,6 @@ async function selectionnerJoueur(joueurId) {
             .filter(Boolean);
 
         afficherDeck();
-<<<<<<< HEAD
-
-=======
->>>>>>> featurehtml
     } catch (err) {
         console.error("Erreur sélection joueur :", err);
     }
@@ -500,10 +383,7 @@ function afficherDeck() {
     if (!deckListeEl) return;
     deckListeEl.innerHTML = '';
     
-<<<<<<< HEAD
     // Le compteur et la valeur restent calculés sur TOUT le deck (même si on recherche)
-=======
->>>>>>> featurehtml
     deckCountEl.textContent = `${cartesDuDeck.length} carte${cartesDuDeck.length > 1 ? 's' : ''}`;
     
     let valeurTotale = 0;
@@ -515,10 +395,6 @@ function afficherDeck() {
         return;
     }
 
-<<<<<<< HEAD
-    // On prépare la liste à afficher (filtrée ou non)
-=======
->>>>>>> featurehtml
     let listeAffichee = cartesDuDeck;
     const requeteRecherche = searchDeckInput && searchDeckInput.value ? searchDeckInput.value.toLowerCase().trim() : '';
 
@@ -538,13 +414,7 @@ function afficherDeck() {
     }
 
     listeAffichee.forEach((carte) => {
-<<<<<<< HEAD
-        // On récupère l'index de la carte dans le VRAI deck pour la supprimer correctement
         const indexReel = cartesDuDeck.indexOf(carte);
-
-=======
-        const indexReel = cartesDuDeck.indexOf(carte);
->>>>>>> featurehtml
         const item = document.createElement('div');
         item.className = 'card-item';
         item.innerHTML = `
@@ -598,10 +468,7 @@ function afficherCatalogue(liste) {
 // ACTIONS D'AJOUT ET SAUVEGARDE
 // ==========================================
 
-<<<<<<< HEAD
 // Ajouter une carte au deck du joueur actif
-=======
->>>>>>> featurehtml
 async function ajouterAuDeck(cote) {
     if (!deckRecordActif) {
         alert("Veuillez sélectionner un joueur d'abord.");
@@ -611,31 +478,15 @@ async function ajouterAuDeck(cote) {
     const carteTrouvee = toutesLesCartes.find(c => c.cote === cote);
     if (!carteTrouvee) return;
 
-<<<<<<< HEAD
-    // 1. Récupérer la limite d'exemplaires (on s'assure que c'est un nombre)
+    // Récupérer la limite d'exemplaires (on s'assure que c'est un nombre)
     const limite = parseInt(carteTrouvee.exemplaire) || 1;
 
     try {
-        // 2. Créer un filtre pour cibler uniquement les decks des joueurs de CETTE aventure
-=======
-    const limite = parseInt(carteTrouvee.exemplaire) || 1;
-
-    try {
->>>>>>> featurehtml
         const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
         let totalEnJeu = 0;
         
         if (filtres) {
-<<<<<<< HEAD
-            // 3. Récupérer tous ces decks depuis la base de données
-            const tousLesDecks = await pb.collection('decks').getFullList({
-                filter: filtres
-            });
-
-            // 4. Compter combien de fois cette carte est déjà distribuée au total
-=======
             const tousLesDecks = await pb.collection('decks').getFullList({ filter: filtres });
->>>>>>> featurehtml
             tousLesDecks.forEach(d => {
                 if (d.cartes && Array.isArray(d.cartes)) {
                     totalEnJeu += d.cartes.filter(c => c === cote).length;
@@ -643,27 +494,16 @@ async function ajouterAuDeck(cote) {
             });
         }
 
-<<<<<<< HEAD
-        // 5. Bloquer si la limite d'exemplaires de l'aventure est atteinte
-=======
->>>>>>> featurehtml
+        // Bloquer si la limite d'exemplaires de l'aventure est atteinte
         if (totalEnJeu >= limite) {
             alert(`Limite atteinte pour "${carteTrouvee.nom}" !\n\nCette carte est limitée à ${limite} exemplaire(s) partagé(s) entre tous les héros de cette aventure.`);
             return; 
         }
-<<<<<<< HEAD
-
-=======
->>>>>>> featurehtml
     } catch (err) {
         console.error("Erreur lors de la vérification de la limite :", err);
         return; 
     }
 
-<<<<<<< HEAD
-    // 6. Si on n'a pas dépassé la limite, on ajoute la carte
-=======
->>>>>>> featurehtml
     cartesDuDeck.push(carteTrouvee);
     afficherDeck();
     await sauvegarderDeck();
@@ -705,10 +545,7 @@ if (searchInput) {
     });
 }
 
-<<<<<<< HEAD
 // Recherche instantanée dans le DECK
-=======
->>>>>>> featurehtml
 if (searchDeckInput) {
     searchDeckInput.addEventListener('input', () => {
         afficherDeck();

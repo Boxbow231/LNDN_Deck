@@ -9,13 +9,9 @@ const DECK_DE_BASE = [
     "D1B04", "D1B11", "D1B11", "D1B02", "D1B09"
 ];
 
-<<<<<<< HEAD
-// 1. Charger et afficher les aventures du joueur connecté
-=======
 // ==========================================
 // 1. CHARGEMENT DES AVENTURES (Créateur + Invité)
 // ==========================================
->>>>>>> featurehtml
 async function chargerAventures() {
     // Afficher le nom de l'utilisateur dans le bouton Mon Compte
     const spanPseudo = document.getElementById('compte-pseudo');
@@ -33,12 +29,8 @@ async function chargerAventures() {
     try {
         const userId = pb.authStore.model.id;
         
-<<<<<<< HEAD
-        const aventures = await pb.collection('aventures').getFullList({
-=======
         // A. Aventures dont on est le créateur
         const mesAventures = await pb.collection('aventures').getFullList({
->>>>>>> featurehtml
             filter: `createur = "${userId}"`,
             sort: '-created'
         });
@@ -100,39 +92,18 @@ async function chargerAventures() {
 
             card.innerHTML = `
                 <div style="flex-grow: 1; cursor: pointer;" onclick="ouvrirAventure('${av.id}')">
-<<<<<<< HEAD
-                    <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin: 0 0 0.3rem 0;">${av.titre}</h3>
-=======
                     <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin: 0 0 0.3rem 0;">
                         ${av.titre} ${estCreateur ? '' : '<span style="font-size: 0.8rem; color: #666; font-weight: normal;">(Invité)</span>'}
                     </h3>
->>>>>>> featurehtml
                     <small style="color: var(--gris-dessin);">Créée le ${new Date(av.created).toLocaleDateString('fr-FR')}</small>
                 </div>
 
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
-<<<<<<< HEAD
-                    <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.45rem 1rem; font-size: 0.85rem; margin-top: 0;">
-                        Voir mon deck
-                    </button>
-
-                    <!-- Menu à 3 points -->
-                    <div class="action-menu-container">
-                        <button type="button" class="btn-dots" onclick="toggleMenu(event, '${av.id}')">⋮</button>
-                        <div id="menu-${av.id}" class="dropdown-menu">
-                            <button type="button" class="dropdown-item" onclick="modifierAventure('${av.id}', '${av.titre.replace(/'/g, "\\'")}')">
-                                ✏️ Renommer
-                            </button>
-                            <button type="button" class="dropdown-item danger" onclick="supprimerAventure('${av.id}', '${av.titre.replace(/'/g, "\\'")}')">
-                                🗑️ Supprimer
-                            </button>
-=======
                     <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.45rem 1rem; font-size: 0.85rem; margin-top: 0;">Voir mon deck</button>
                     <div class="action-menu-container">
                         <button type="button" class="btn-dots" onclick="toggleMenu(event, '${av.id}')">⋮</button>
                         <div id="menu-${av.id}" class="dropdown-menu">
                             ${menuActions}
->>>>>>> featurehtml
                         </div>
                     </div>
                 </div>
@@ -145,23 +116,6 @@ async function chargerAventures() {
     }
 }
 
-<<<<<<< HEAD
-// 2. Gestion de l'affichage du menu déroulant
-function toggleMenu(event, aventureId) {
-    event.stopPropagation();
-    // Fermer les autres menus ouverts
-    document.querySelectorAll('.dropdown-menu').forEach(m => {
-        if (m.id !== `menu-${aventureId}`) m.classList.remove('show');
-    });
-
-    const menu = document.getElementById(`menu-${aventureId}`);
-    if (menu) {
-        menu.classList.toggle('show');
-    }
-}
-
-// Ferme les menus au clic ailleurs sur la page
-=======
 // ==========================================
 // 2. GESTION DES INVITATIONS REÇUES
 // ==========================================
@@ -267,25 +221,10 @@ function toggleMenu(event, aventureId) {
     if (menu) menu.classList.toggle('show');
 }
 
->>>>>>> featurehtml
 window.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 });
 
-<<<<<<< HEAD
-// 3. Modifier (renommer) une aventure
-async function modifierAventure(aventureId, ancienTitre) {
-    const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure :", ancienTitre);
-    if (!nouveauTitre || nouveauTitre.trim() === "" || nouveauTitre.trim() === ancienTitre) return;
-
-    try {
-        await pb.collection('aventures').update(aventureId, {
-            titre: nouveauTitre.trim()
-        });
-        await chargerAventures();
-    } catch (err) {
-        console.error("Erreur modification aventure :", err);
-=======
 // Action exclusive au créateur
 window.modifierAventure = async function(aventureId, ancienTitre) {
     const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure :", ancienTitre);
@@ -294,49 +233,10 @@ window.modifierAventure = async function(aventureId, ancienTitre) {
         await pb.collection('aventures').update(aventureId, { titre: nouveauTitre.trim() });
         await chargerAventures();
     } catch (err) {
->>>>>>> featurehtml
         alert("Impossible de renommer l'aventure.");
     }
 }
 
-<<<<<<< HEAD
-// 4. Supprimer une aventure en cascade (Aventure -> Joueurs -> Decks)
-async function supprimerAventure(aventureId, titre) {
-    const confirmation = confirm(`Es-tu sûr de vouloir supprimer définitivement l'aventure "${titre}" ainsi que tous les joueurs et decks associés ?`);
-    if (!confirmation) return;
-
-    try {
-        // a. Récupérer tous les joueurs liés à cette aventure
-        const joueurs = await pb.collection('joueurs').getFullList({
-            filter: `aventure = "${aventureId}"`
-        });
-
-        // b. Pour chaque joueur, supprimer son/ses deck(s)
-        for (const joueur of joueurs) {
-            const decks = await pb.collection('decks').getFullList({
-                filter: `joueur = "${joueur.id}"`
-            });
-            for (const deck of decks) {
-                await pb.collection('decks').delete(deck.id);
-            }
-            // c. Supprimer le joueur
-            await pb.collection('joueurs').delete(joueur.id);
-        }
-
-        // d. Supprimer l'aventure elle-même
-        await pb.collection('aventures').delete(aventureId);
-
-        // Recharger la liste
-        await chargerAventures();
-
-    } catch (err) {
-        console.error("Erreur suppression aventure :", err);
-        alert(`Erreur lors de la suppression : ${err.message || 'Action refusée'}`);
-    }
-}
-
-// 5. Créer une aventure + joueur + deck initial
-=======
 // Action exclusive au créateur
 window.supprimerAventure = async function(aventureId, titre) {
     const confirmation = confirm(`Es-tu sûr de vouloir supprimer définitivement l'aventure "${titre}" ainsi que tous les joueurs et decks associés ?`);
@@ -387,7 +287,6 @@ function ouvrirAventure(aventureId) {
 // ==========================================
 // 4. CREATION DE NOUVELLE AVENTURE
 // ==========================================
->>>>>>> featurehtml
 if (createForm) {
     createForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -397,10 +296,6 @@ if (createForm) {
 
         try {
             const userId = pb.authStore.model.id;
-<<<<<<< HEAD
-
-=======
->>>>>>> featurehtml
             const nouvelleAventure = await pb.collection('aventures').create({
                 titre: titre,
                 createur: userId
@@ -409,16 +304,9 @@ if (createForm) {
             const joueur = await pb.collection('joueurs').create({
                 aventure: nouvelleAventure.id,
                 utilisateur: userId,
-<<<<<<< HEAD
-                nom_provisoire: pb.authStore.model.name || 'Héros Principal'
-            });
-
-            // Création du deck avec les cartes de base
-=======
                 nom_provisoire: pb.authStore.model.username || pb.authStore.model.name || 'Héros Principal'
             });
 
->>>>>>> featurehtml
             await pb.collection('decks').create({
                 joueur: joueur.id,
                 cartes: DECK_DE_BASE
@@ -434,13 +322,6 @@ if (createForm) {
     });
 }
 
-<<<<<<< HEAD
-function ouvrirAventure(aventureId) {
-    window.location.href = `deck.html?aventure=${aventureId}`;
-}
-
-// Initialisation
-=======
 // ==========================================
 // 5. GESTION DU PROFIL (MON COMPTE)
 // ==========================================
@@ -548,5 +429,4 @@ if (formMonCompte) {
 
 // Initialisation au chargement de la page
 chargerInvitationsAventures();
->>>>>>> featurehtml
 chargerAventures();
