@@ -18,10 +18,10 @@ let mesDroits = "spectateur";
 let createurAventureId = null;
 
 const DECKS_DE_BASE = {
-    1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"], // Deck Joueur 1
-    2: ["D2B01", "D2B02", "D2B03", "D2B04", "D2B04", "D2B05", "D2B06", "D2B07", "D2B08", "D2B09", "D2B10", "D2B11", "D2B11", "D2B12", "D2B12"], // Deck Joueur 2
-    3: ["D3B01", "D3B02", "D3B03", "D3B04", "D3B04", "D3B05", "D3B06", "D3B07", "D3B08", "D3B09", "D3B10", "D3B11", "D3B11", "D3B12", "D3B12"], // Deck Joueur 3
-    4: ["D4B01", "D4B02", "D4B03", "D4B04", "D4B04", "D4B05", "D4B06", "D4B07", "D4B08", "D4B09", "D4B10", "D4B11", "D4B11", "D4B12", "D4B12"]  // Deck Joueur 4
+    1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"],
+    2: ["D2B01", "D2B02", "D2B03", "D2B04", "D2B04", "D2B05", "D2B06", "D2B07", "D2B08", "D2B09", "D2B10", "D2B11", "D2B11", "D2B12", "D2B12"],
+    3: ["D3B01", "D3B02", "D3B03", "D3B04", "D3B04", "D3B05", "D3B06", "D3B07", "D3B08", "D3B09", "D3B10", "D3B11", "D3B11", "D3B12", "D3B12"],
+    4: ["D4B01", "D4B02", "D4B03", "D4B04", "D4B04", "D4B05", "D4B06", "D4B07", "D4B08", "D4B09", "D4B10", "D4B11", "D4B11", "D4B12", "D4B12"]
 };
 let slotInvitationEnCours = null;
 const MAX_JOUEURS = 4;
@@ -39,11 +39,75 @@ const deckCountEl = document.getElementById('deck-count');
 const catalogueListeEl = document.getElementById('catalogue-cartes-liste');
 const searchInput = document.getElementById('search-input');
 
-// Éléments DOM pour l'invitation d'amis
 const btnInviter = document.getElementById('btn-inviter-ami');
 const modalInvitation = document.getElementById('modal-invitation');
 const listeAmisInvitation = document.getElementById('liste-amis-invitation');
 const btnFermerModal = document.getElementById('fermer-modal-invitation');
+
+// ==========================================
+// FONCTIONS D'AFFICHAGE DES PARTICIPANTS
+// ==========================================
+
+function afficherInvites() {
+    const invitesListeEl = document.getElementById('invites-liste');
+    
+    // On cible la boîte globale qui contient aussi le titre
+    const zoneInvitesContainer = document.getElementById('zone-invites-container');
+    
+    const estCreateur = (pb.authStore.model.id === createurAventureId);
+
+    // Si le joueur N'EST PAS le créateur, on cache TOUT
+    if (!estCreateur) {
+        if (zoneInvitesContainer) {
+            zoneInvitesContainer.style.display = 'none';
+        } else if (invitesListeEl) {
+            // Sécurité au cas où le HTML n'est pas encore à jour
+            invitesListeEl.style.display = 'none';
+            if (invitesListeEl.previousElementSibling) invitesListeEl.previousElementSibling.style.display = 'none';
+        }
+        return; // On arrête la fonction ici
+    } else {
+        // Si on est le créateur, on affiche la zone
+        if (zoneInvitesContainer) zoneInvitesContainer.style.display = 'block';
+    }
+
+    if (!invitesListeEl) return;
+    invitesListeEl.innerHTML = '';
+
+    if (participantsAventure.length === 0) {
+        invitesListeEl.innerHTML = '<p style="text-align: center; font-size: 0.75rem; font-style: italic; color: #888;">Aucun autre compagnon invité.</p>';
+        return;
+    }
+
+    participantsAventure.forEach(part => {
+        // On n'affiche pas le créateur dans la liste des invités à gérer
+        if (part.utilisateur === createurAventureId) return;
+
+        const nom = part.expand?.utilisateur?.username || part.expand?.utilisateur?.name || 'Inconnu';
+        
+        let htmlDroits = `
+            <select onchange="changerDroitParticipant('${part.id}', this.value)" style="font-size: 0.7rem; padding: 0.2rem; width: 100%; margin-bottom: 0.3rem; border: 1px solid var(--encre-noire);">
+                <option value="spectateur" ${part.permission === 'spectateur' ? 'selected' : ''}>👁️ Juste regarder</option>
+                <option value="deck" ${part.permission === 'deck' ? 'selected' : ''}>🃏 Modifier son deck</option>
+                <option value="admin" ${part.permission === 'admin' ? 'selected' : ''}>👑 Gérer les héros (Admin)</option>
+            </select>
+            <button class="btn-action btn-danger" onclick="expulserParticipant('${part.id}', '${nom}')" style="font-size: 0.7rem; padding: 0.2rem; width: 100%;">Expulser</button>
+        `;
+
+        const div = document.createElement('div');
+        div.className = 'player-item';
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        div.style.alignItems = 'flex-start';
+        div.style.gap = '0.4rem';
+
+        div.innerHTML = `
+            <div style="font-weight: bold; font-size: 0.85rem;">👤 ${nom}</div>
+            <div style="width: 100%;">${htmlDroits}</div>
+        `;
+        invitesListeEl.appendChild(div);
+    });
+}
 
 async function chargerParticipants() {
     const userId = pb.authStore.model.id;
@@ -52,36 +116,10 @@ async function chargerParticipants() {
     }
 
     try {
-        // 1. On récupère les participants enregistrés
         participantsAventure = await pb.collection('participants').getFullList({
-            filter: `aventure = "${aventureId}"`, 
+            filter: `aventures = "${aventureId}"`, 
             expand: 'utilisateur'
         });
-        
-        // 2. SÉCURITÉ DE SECOURS : Si le créateur n'a pas encore de participants dans la table 
-        // mais qu'il y a des joueurs dans les slots, on les ajoute automatiquement pour l'affichage
-        if (participantsAventure.length === 0 && listeJoueurs.length > 0) {
-            for (const joueur of listeJoueurs) {
-                if (joueur.utilisateur && joueur.utilisateur !== createurAventureId) {
-                    // On crée le participant à la volée pour qu'il apparaisse dans la liste
-                    try {
-                        const nouveauPart = await pb.collection('participants').create({
-                            aventure: aventureId,
-                            utilisateur: joueur.utilisateur,
-                            permission: 'deck' // Par défaut : éditeur de deck
-                        });
-                        participantsAventure.push(nouveauPart);
-                    } catch(err) {
-                        console.warn("Création automatique du participant ignorée :", err);
-                    }
-                }
-            }
-            // On recharge pour avoir les "expand" propres
-            participantsAventure = await pb.collection('participants').getFullList({
-                filter: `aventure = "${aventureId}"`, 
-                expand: 'utilisateur'
-            });
-        }
 
         if (userId !== createurAventureId) {
             const monAcces = participantsAventure.find(p => p.utilisateur === userId || p.utilisateur?.id === userId);
@@ -90,7 +128,9 @@ async function chargerParticipants() {
 
         afficherInvites();
     } catch(e) {
-        console.error("Erreur chargement participants :", e);
+        console.warn("La table participants est vide ou inaccessible", e);
+        participantsAventure = [];
+        afficherInvites();
     }
 }
 
@@ -113,25 +153,9 @@ window.expulserParticipant = async function(id, nom) {
     }
 };
 
-// Fonction pour compter les cartes utilisées dans TOUS les decks de l'aventure
-async function majCompteCartes() {
-    compteCartesUtilisees = {};
-    if (listeJoueurs.length === 0) return;
-    
-    const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
-    try {
-        const decks = await pb.collection('decks').getFullList({ filter: filtres });
-        decks.forEach(d => {
-            if (d.cartes && Array.isArray(d.cartes)) {
-                d.cartes.forEach(cote => {
-                    compteCartesUtilisees[cote] = (compteCartesUtilisees[cote] || 0) + 1;
-                });
-            }
-        });
-    } catch(err) {
-        console.error("Erreur lors du calcul des cartes disponibles :", err);
-    }
-}
+// ==========================================
+// INITIALISATION DE LA PAGE
+// ==========================================
 
 async function initialiserPage() {
     if (!pb.authStore.isValid) {
@@ -148,22 +172,39 @@ async function initialiserPage() {
     try {
         const userId = pb.authStore.model.id;
 
-        // Étape 1 : Charger l'aventure
+        // Étape 1 : Charger l'aventure d'abord
         const aventure = await pb.collection('aventures').getOne(aventureId);
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
 
         createurAventureId = aventure.createur; 
-        
-        await chargerParticipants(); // On charge les invités
-        // Étape 2 : Charger le catalogue complet (sans l'afficher tout de suite)
+
+        // Étape 2 : Vérifier / Créer le participant créateur en toute sécurité
+        try {
+            const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
+            if (!dejaParticipant) {
+                await pb.collection('participants').create({
+                    aventures: aventureId,
+                    utilisateur: userId,
+                    permission: 'admin'
+                });
+            }
+        } catch (err) {
+            await pb.collection('participants').create({
+                aventures: aventureId,
+                utilisateur: userId,
+                permission: 'admin'
+            }).catch(e => console.warn("Création participant créateur ignorée :", e));
+        }
+
+        await chargerParticipants(); 
+
+        // Étape 3 : Charger le catalogue complet
         toutesLesCartes = await pb.collection('cartes_butins').getFullList({
             sort: 'cote'
         });
 
-        // Étape 3 : Charger tous les joueurs
+        // Étape 4 : Charger les joueurs et les decks
         await chargerJoueurs(userId);
-        
-        // Étape 4 : Calculer les disponibilités et afficher le catalogue
         await majCompteCartes();
         afficherCatalogue(toutesLesCartes);
 
@@ -204,7 +245,6 @@ async function chargerAmisPourInvitation() {
 
         const idsDejaPresents = listeJoueurs.map(j => j.utilisateur); 
 
-        // Récupérer les invitations déjà envoyées pour ne pas spammer
         const invitationsEnAttente = await pb.collection('invitations_aventures').getFullList({
             filter: `aventure = "${aventureId}"`
         });
@@ -256,15 +296,12 @@ async function chargerAmisPourInvitation() {
     }
 }
 
-// Fonction appelée quand on clique sur "Inviter"
 window.ajouterAmiAventure = async function(amiId, btnElement) {
     btnElement.disabled = true;
     btnElement.innerText = 'Envoi...';
     
     try {
         const userId = pb.authStore.model.id;
-
-        // On crée une invitation d'aventure
         await pb.collection('invitations_aventures').create({
             aventure: aventureId,
             demandeur: userId,
@@ -274,7 +311,6 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
         btnElement.innerText = 'Envoyé !';
         btnElement.style.backgroundColor = '#2e8b57';
         btnElement.style.borderColor = '#2e8b57';
-        
     } catch (err) {
         console.error("Erreur lors de l'invitation :", err);
         alert("Erreur lors de l'invitation.");
@@ -287,16 +323,14 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
 // GESTION DES JOUEURS (SIDEBAR)
 // ==========================================
 
-// --- 1. SÉCURITÉ DE CHARGEMENT POUR LES ANCIENS JOUEURS ---
 async function chargerJoueurs(userId) {
     try {
         listeJoueurs = await pb.collection('joueurs').getFullList({ filter: `aventure = "${aventureId}"`, sort: 'created' });
         
-        // NOUVEAU : On charge aussi les invitations en attente pour cette aventure
         invitationsAventure = await pb.collection('invitations_aventures').getFullList({
             filter: `aventure = "${aventureId}"`
         });
-        // Si d'anciens joueurs n'ont pas de numéro d'emplacement, on leur assigne les premiers libres
+
         let slotsOccupes = listeJoueurs.map(j => j.emplacement).filter(e => e);
         for (let j of listeJoueurs) {
             if (!j.emplacement) {
@@ -319,7 +353,6 @@ async function chargerJoueurs(userId) {
     } catch (err) { console.error("Erreur chargement joueurs :", err); }
 }
 
-// --- 2. AFFICHAGE DES 4 CASES FIXES ---
 function afficherJoueurs() {
     if (!joueursListeEl) return;
     joueursListeEl.innerHTML = '';
@@ -328,13 +361,10 @@ function afficherJoueurs() {
         const joueurSlot = listeJoueurs.find(j => parseInt(j.emplacement) === i);
         const invitationEnAttente = invitationsAventure.find(inv => parseInt(inv.emplacement) === i);
         
-        // CORRECTION : Déclaration globale pour cette itération de boucle
         const div = document.createElement('div');
-        
         const peutGererHeros = (mesDroits === 'admin' || mesDroits === 'createur');
         
         if (joueurSlot) {
-            // ---> SI LA CASE EST OCCUPÉE <---
             const estActif = joueurActif && joueurActif.id === joueurSlot.id;
             div.className = `player-item ${estActif ? 'active' : ''}`;
             div.style.display = 'flex';
@@ -368,9 +398,7 @@ function afficherJoueurs() {
                 </div>
                 ${menuHtml}
             `;
-            
         } else if (invitationEnAttente) {
-            // ---> SI LA CASE EST EN ATTENTE D'INVITATION <---
             div.className = 'player-item';
             div.style.display = 'flex';
             div.style.flexDirection = 'column';
@@ -382,11 +410,9 @@ function afficherJoueurs() {
             div.innerHTML = `
                 <div style="font-size: 0.8rem; font-weight: bold; color: #b8860b; text-align: center;">Emplacement ${i} (En attente)</div>
                 <div style="font-size: 0.75rem; text-align: center; color: #666; font-style: italic;">Invitation envoyée...</div>
-                ${peutGererHeros ? `<button class="btn-action btn-danger" onclick="annulerInvitationSlot('${invitationEnAttente.id}')" style="font-size: 0.75rem; padding: 0.3rem; margin-top: 0.3rem;">Annuler l'invitation</button>` : ''}
+                ${peutGererHeros ? `<button class="btn-action btn-danger" onclick="annulerInvitationSlot('\${invitationEnAttente.id}')" style="font-size: 0.75rem; padding: 0.3rem; margin-top: 0.3rem;">Annuler l'invitation</button>` : ''}
             `;
-            
         } else {
-            // ---> SI LA CASE EST VIDE <---
             div.className = 'player-item';
             div.style.display = 'flex';
             div.style.flexDirection = 'column';
@@ -406,7 +432,7 @@ function afficherJoueurs() {
 
             div.innerHTML = `
                 <div style="font-size: 0.8rem; font-weight: bold; color: #666; text-align: center;">Emplacement ${i} (Libre)</div>
-                ${mesDroits !== 'spectateur' ? `<input type="text" id="input-slot-${i}" placeholder="Nom du héros ${i}..." style="padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire);">` : ''}
+                ${mesDroits !== 'spectateur' ? `<input type="text" id="input-slot-\${i}" placeholder="Nom du héros ${i}..." style="padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire);">` : ''}
                 ${boutonsCreationHtml}
             `;
         }
@@ -415,7 +441,6 @@ function afficherJoueurs() {
     }
 }
 
-// --- 3. CRÉATION DU JOUEUR AVEC LE BON DECK ---
 window.creerJoueurSlot = async function(slotId) {
     const input = document.getElementById(`input-slot-${slotId}`);
     const nom = input.value.trim();
@@ -423,7 +448,6 @@ window.creerJoueurSlot = async function(slotId) {
 
     try {
         const userId = pb.authStore.model.id;
-        
         const nouveauJoueur = await pb.collection('joueurs').create({
             aventure: aventureId,
             utilisateur: userId,
@@ -431,18 +455,14 @@ window.creerJoueurSlot = async function(slotId) {
             emplacement: parseInt(slotId) 
         });
 
-        // ... la suite de ton code
-
         const deckDeDepart = DECKS_DE_BASE[slotId] || DECKS_DE_BASE[1];
         await pb.collection('decks').create({ joueur: nouveauJoueur.id, cartes: deckDeDepart });
         
         listeJoueurs.push(nouveauJoueur);
-        
-        // CORRECTION DU BUG (Image) : On force le focus (joueurActif) sur le nouveau joueur !
         joueurActif = nouveauJoueur; 
         
         afficherJoueurs();
-        await selectionnerJoueur(nouveauJoueur.id); // Met à jour le panneau central
+        await selectionnerJoueur(nouveauJoueur.id); 
         await majCompteCartes(); 
         rafraichirCatalogueAffichage();
 
@@ -454,25 +474,20 @@ window.creerJoueurSlot = async function(slotId) {
 
 window.annulerInvitationSlot = async function(invitationId) {
     if (!confirm("Voulez-vous vraiment annuler cette invitation et libérer l'emplacement ?")) return;
-    
     try {
         await pb.collection('invitations_aventures').delete(invitationId);
-        // Met à jour la liste locale
         invitationsAventure = invitationsAventure.filter(inv => inv.id !== invitationId);
-        afficherJoueurs(); // Libère la case visuellement
+        afficherJoueurs();
     } catch (err) {
         console.error("Erreur annulation invitation :", err);
-        alert("Impossible d'annuler l'invitation pour le moment.");
     }
 };
 
-// --- 4. MODIFICATION DES INVITATIONS ---
 window.ouvrirModalInvitation = async function(slotId) {
     slotInvitationEnCours = slotId;
     modalInvitation.style.display = 'flex';
     await chargerAmisPourInvitation();
 };
-
 
 function toggleMenuJoueur(event, joueurId) {
     event.stopPropagation(); 
@@ -529,39 +544,8 @@ async function supprimerJoueur(event, joueurId, nom) {
     }
 }
 
-if (formAjoutJoueur) {
-    formAjoutJoueur.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (listeJoueurs.length >= MAX_JOUEURS) {
-            alert(`Impossible d'ajouter ce héros. Le groupe est complet (${MAX_JOUEURS} joueurs maximum).`);
-            return;
-        }
-
-        const nom = nouveauJoueurInput.value.trim();
-        if (!nom) return;
-
-        try {
-            const userId = pb.authStore.model.id;
-            const nouveauJoueur = await pb.collection('joueurs').create({
-                aventure: aventureId,
-                utilisateur: userId,
-                nom_provisoire: nom
-            });
-
-            await pb.collection('decks').create({ joueur: nouveauJoueur.id, cartes: DECK_DE_BASE });
-            nouveauJoueurInput.value = '';
-            listeJoueurs.push(nouveauJoueur);
-            afficherJoueurs();
-            await selectionnerJoueur(nouveauJoueur.id);
-        } catch (err) {
-            console.error("Erreur ajout joueur :", err);
-            alert("Impossible de créer ce joueur.");
-        }
-    });
-}
-
 // ==========================================
-// GESTION DU DECK (PANNEAU CENTRAL)
+// GESTION DU DECK & CATALOGUE
 // ==========================================
 
 async function selectionnerJoueur(joueurId) {
@@ -577,10 +561,10 @@ async function selectionnerJoueur(joueurId) {
         try {
             deckRecordActif = await pb.collection('decks').getFirstListItem(`joueur = "${joueurActif.id}"`);
         } catch (e) {
-        const deckDeDepart = DECKS_DE_BASE[joueurActif.emplacement] || DECKS_DE_BASE[1];
-        deckRecordActif = await pb.collection('decks').create({
-            joueur: joueurActif.id,
-            cartes: deckDeDepart
+            const deckDeDepart = DECKS_DE_BASE[joueurActif.emplacement] || DECKS_DE_BASE[1];
+            deckRecordActif = await pb.collection('decks').create({
+                joueur: joueurActif.id,
+                cartes: deckDeDepart
             });
         }
 
@@ -599,7 +583,6 @@ function afficherDeck() {
     if (!deckListeEl) return;
     deckListeEl.innerHTML = '';
     
-    // Le compteur et la valeur restent calculés sur TOUT le deck (même si on recherche)
     deckCountEl.textContent = `${cartesDuDeck.length} carte${cartesDuDeck.length > 1 ? 's' : ''}`;
     
     let valeurTotale = 0;
@@ -650,10 +633,6 @@ function afficherDeck() {
     });
 }
 
-// ==========================================
-// GESTION DU CATALOGUE (PANNEAU DROIT)
-// ==========================================
-
 function afficherCatalogue(liste) {
     if (!catalogueListeEl) return;
     catalogueListeEl.innerHTML = '';
@@ -664,12 +643,10 @@ function afficherCatalogue(liste) {
     }
 
     liste.forEach(carte => {
-        // Calcul de la disponibilité
         const limite = parseInt(carte.exemplaire) || 1;
         const utilisees = compteCartesUtilisees[carte.cote] || 0;
         const dispo = limite - utilisees;
         
-        // Style conditionnel selon le stock
         const btnDisabled = dispo <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
         const texteDispo = dispo > 0 
             ? `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>` 
@@ -694,11 +671,6 @@ function afficherCatalogue(liste) {
     });
 }
 
-// ==========================================
-// ACTIONS D'AJOUT ET SAUVEGARDE
-// ==========================================
-
-// Petite fonction utilitaire pour rafraîchir le catalogue (en respectant la barre de recherche)
 function rafraichirCatalogueAffichage() {
     const query = searchInput && searchInput.value ? searchInput.value.toLowerCase().trim() : '';
     if (query) {
@@ -725,14 +697,10 @@ async function ajouterAuDeck(cote) {
         return; 
     }
 
-    // Ajout au deck
     cartesDuDeck.push(carteTrouvee);
-    
-    // Mise à jour immédiate et rafraîchissement
     compteCartesUtilisees[cote] = utilisees + 1;
     afficherDeck();
     rafraichirCatalogueAffichage();
-    
     await sauvegarderDeck();
 }
 
@@ -742,14 +710,12 @@ async function retirerDuDeck(index) {
     const carteRetiree = cartesDuDeck[index];
     cartesDuDeck.splice(index, 1);
     
-    // Mise à jour immédiate et rafraîchissement
     if (carteRetiree && compteCartesUtilisees[carteRetiree.cote]) {
         compteCartesUtilisees[carteRetiree.cote]--;
     }
 
     afficherDeck();
     rafraichirCatalogueAffichage();
-    
     await sauvegarderDeck();
 }
 
@@ -759,6 +725,25 @@ async function sauvegarderDeck() {
         await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes });
     } catch (err) {
         console.error("Erreur de sauvegarde :", err);
+    }
+}
+
+async function majCompteCartes() {
+    compteCartesUtilisees = {};
+    if (listeJoueurs.length === 0) return;
+    
+    const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
+    try {
+        const decks = await pb.collection('decks').getFullList({ filter: filtres });
+        decks.forEach(d => {
+            if (d.cartes && Array.isArray(d.cartes)) {
+                d.cartes.forEach(cote => {
+                    compteCartesUtilisees[cote] = (compteCartesUtilisees[cote] || 0) + 1;
+                });
+            }
+        });
+    } catch(err) {
+        console.error("Erreur lors du calcul des cartes disponibles :", err);
     }
 }
 
@@ -782,11 +767,11 @@ if (searchInput) {
     });
 }
 
-// Recherche instantanée dans le DECK
 if (searchDeckInput) {
     searchDeckInput.addEventListener('input', () => {
         afficherDeck();
     });
 }
 
+// Lancement principal au chargement du fichier
 initialiserPage();
