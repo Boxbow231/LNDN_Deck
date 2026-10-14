@@ -1,7 +1,7 @@
 
 # Les Nominés du Néombre - Gestionnaire d'Aventures
 
-Application web officielle d'accompagnement pour le jeu de société **"Les Nominés du Néombre"** (créé par Antoine Poullin & Pierre Cailloux). Cette plateforme permet aux joueurs de numériser leur progression, de gérer leurs decks et d'interagir avec leur liste d'amis.
+Application web d'accompagnement pour le jeu de société **"Les Nominés du Néombre"** (créé par Antoine Poullin & Pierre Cailloux). Cette plateforme permet aux joueurs de numériser leur progression, de gérer leurs decks et d'interagir avec leur liste d'amis.
 
 Ce projet a été développé en étroite collaboration avec les auteurs du jeu afin de traduire les mécaniques ludiques en une architecture de données structurée et une interface utilisateur immersive.
 
@@ -16,7 +16,7 @@ Ce projet a été développé en étroite collaboration avec les auteurs du jeu 
 
 * **Frontend :** HTML5, CSS3 (Flexbox/Grid, Mobile-First), Vanilla JavaScript.
 * **Backend & Base de données :** [PocketBase](https://pocketbase.io/) (SQLite, authentification intégrée, API RESTful).
-* **Hébergement & Déploiement :** Netlify (Frontend) / Infrastructure auto-hébergée (Backend).
+* **Hébergement & Déploiement : en cours...
 
 ## 🗄️ Architecture des Données
 
@@ -56,7 +56,7 @@ Si vous souhaitez faire tourner ce projet sur votre machine :
 
 ## ✒️ Auteur & Crédits
 
-* **Développement Web & Architecture Data :** Aurélien GIGUERRE ([LinkedIn](https://www.google.com/search?q=http://www.linkedin.com/in/aur%C3%A9lien-giguerre) | [GitHub](https://www.google.com/search?q=https://github.com/Boxbow231))
+* **Développement Web & Architecture Data :** Aurélien GIGUERRE ([LinkedIn](https://linkedin.com/in/aurélien-giguerre) | [GitHub](https://github.com/Boxbow231))
 * **Créateurs du jeu de société :** Antoine Poullin & Pierre Cailloux
 
 > *Projet développé dans le cadre de mon BUT Informatique (Parcours Réalisation d'applications) et en vue de mon stage en tant que Data Analyst.*
