@@ -157,39 +157,19 @@
     </header>
 
     <main class="deck-layout">
-        <!-- 1. SIDEBAR : Joueurs de l'aventure -->
         <aside class="panel">
             <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.8rem 0;">Compagnons</h3>
 
-            <!-- Formulaire d'ajout d'un nouveau joueur -->
-            <form id="form-ajout-joueur" style="margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                <input type="text" id="nouveau-joueur-nom" placeholder="Nom du héros..." required style="padding: 0.4rem; font-size: 0.85rem;">
-                <button type="submit" class="btn-action" style="width: 100%;">+ Ajouter un joueur</button>
-            </form>
+            <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin-bottom: 0.4rem;">Les 4 emplacements :</div>
             
-            <!-- Bouton pour ouvrir la liste d'amis -->
-            <button id="btn-inviter-ami" class="btn-action" style="padding: 0.4rem; font-size: 0.7rem; width: 100%; margin-bottom: 1.5rem;">+ Inviter un compagnon</button>
-
-            <!-- Modale cachée par défaut (le fond noir semi-transparent) -->
-            <div id="modal-invitation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
-                
-                <!-- La carte parchemin au centre -->
-                <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 400px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                    
-                    <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center;">Inviter un ami</h3>
-                    
-                    <!-- La liste s'affichera ici -->
-                    <div id="liste-amis-invitation" style="margin-top: 1rem; max-height: 250px; overflow-y: auto; padding-right: 0.5rem;">
-                        <p style="text-align: center; color: #666; font-style: italic;">Chargement de vos compagnons...</p>
-                    </div>
-                    
-                    <button id="fermer-modal-invitation" class="btn-action btn-danger" style="margin-top: 1.5rem; width: 100%;">Fermer</button>
-                </div>
+            <!-- Les 4 cases seront générées ici par le JavaScript -->
+            <div id="joueurs-liste" class="cards-scroll-container" style="margin-top: 0; gap: 1rem;">
+                <p style="text-align: center; color: var(--gris-dessin);">Chargement…</p>
             </div>
 
-            <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin-bottom: 0.4rem;">Sélectionnez un héros :</div>
-            <div id="joueurs-liste" class="cards-scroll-container" style="margin-top: 0;">
-                <p style="text-align: center; color: var(--gris-dessin);">Chargement…</p>
+            <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin: 1.5rem 0 0.4rem 0;">Invités de l'aventure :</div>
+            <div id="invites-liste" class="cards-scroll-container" style="margin-top: 0; gap: 0.5rem; max-height: 200px;">
+                <p style="text-align: center; color: var(--gris-dessin);">Chargement...</p>
             </div>
         </aside>
 
