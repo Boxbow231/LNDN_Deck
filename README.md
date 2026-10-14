@@ -56,7 +56,7 @@ Si vous souhaitez faire tourner ce projet sur votre machine :
 
 ## ✒️ Auteur & Crédits
 
-* **Développement Web & Architecture Data :** Aurélien GIGUERRE ([LinkedIn](https://www.google.com/search?q=http://www.linkedin.com/in/aur%C3%A9lien-giguerre) | [GitHub](https://www.google.com/search?q=https://github.com/Boxbow231))
+* **Développement Web & Architecture Data :** Aurélien GIGUERRE ([LinkedIn](https:linkedin.com/in/auréien-giguerre) | [GitHub](https://github.com/Boxbow231))
 * **Créateurs du jeu de société :** Antoine Poullin & Pierre Cailloux
 
 > *Projet développé dans le cadre de mon BUT Informatique (Parcours Réalisation d'applications) et en vue de mon stage en tant que Data Analyst.*
