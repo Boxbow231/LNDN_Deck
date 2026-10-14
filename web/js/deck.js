@@ -17,7 +17,11 @@ const DECK_DE_BASE = [
     "D1B04", "D1B11", "D1B11", "D1B02", "D1B09"
 ];
 
+<<<<<<< HEAD
 // 3. Éléments DOM
+=======
+// 3. Éléments DOM classiques
+>>>>>>> featurehtml
 const titreAventureEl = document.getElementById('aventure-titre');
 const joueursListeEl = document.getElementById('joueurs-liste');
 const formAjoutJoueur = document.getElementById('form-ajout-joueur');
@@ -29,6 +33,12 @@ const deckCountEl = document.getElementById('deck-count');
 
 const catalogueListeEl = document.getElementById('catalogue-cartes-liste');
 const searchInput = document.getElementById('search-input');
+
+// Éléments DOM pour l'invitation d'amis
+const btnInviter = document.getElementById('btn-inviter-ami');
+const modalInvitation = document.getElementById('modal-invitation');
+const listeAmisInvitation = document.getElementById('liste-amis-invitation');
+const btnFermerModal = document.getElementById('fermer-modal-invitation');
 
 async function initialiserPage() {
     if (!pb.authStore.isValid) {
@@ -65,6 +75,116 @@ async function initialiserPage() {
 }
 
 // ==========================================
+<<<<<<< HEAD
+=======
+// GESTION DES INVITATIONS D'AMIS
+// ==========================================
+if (btnInviter) {
+    btnInviter.addEventListener('click', async () => {
+        modalInvitation.style.display = 'flex';
+        await chargerAmisPourInvitation();
+    });
+}
+
+if (btnFermerModal) {
+    btnFermerModal.addEventListener('click', () => {
+        modalInvitation.style.display = 'none';
+    });
+}
+
+async function chargerAmisPourInvitation() {
+    try {
+        const userId = pb.authStore.model.id;
+        
+        const toutesRelations = await pb.collection('amis').getFullList({
+            filter: `(demandeur = "${userId}" || receveur = "${userId}") && statut = "accepte"`,
+            expand: 'demandeur,receveur'
+        });
+
+        const idsDejaPresents = listeJoueurs.map(j => j.utilisateur); 
+
+        // NOUVEAU : Récupérer les invitations déjà envoyées pour ne pas spammer
+        const invitationsEnAttente = await pb.collection('invitations_aventures').getFullList({
+            filter: `aventure = "${aventureId}"`
+        });
+        const idsInvites = invitationsEnAttente.map(inv => inv.receveur);
+
+        listeAmisInvitation.innerHTML = '';
+
+        if (toutesRelations.length === 0) {
+            listeAmisInvitation.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Vous n\'avez pas encore de compagnons.</p>';
+            return;
+        }
+
+        toutesRelations.forEach(rel => {
+            const ami = rel.demandeur === userId ? rel.expand?.receveur : rel.expand?.demandeur;
+            if (!ami) return;
+
+            const estDejaDansLaventure = idsDejaPresents.includes(ami.id);
+            const estDejaInvite = idsInvites.includes(ami.id);
+            const nomAmiSafe = (ami.username || ami.name || 'Héros').replace(/'/g, "\\'");
+
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.justifyContent = 'space-between';
+            div.style.alignItems = 'center';
+            div.style.padding = '0.5rem 0';
+            div.style.borderBottom = '1px dashed var(--encre-noire)';
+
+            if (estDejaDansLaventure) {
+                div.innerHTML = `
+                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
+                    <span style="color: #666; font-style: italic; font-size: 0.85rem;">Déjà présent</span>
+                `;
+            } else if (estDejaInvite) {
+                div.innerHTML = `
+                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
+                    <span style="color: #b8860b; font-style: italic; font-size: 0.85rem;">En attente...</span>
+                `;
+            } else {
+                div.innerHTML = `
+                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
+                    <button class="btn-action" onclick="ajouterAmiAventure('${ami.id}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; width: auto;">Inviter</button>
+                `;
+            }
+            listeAmisInvitation.appendChild(div);
+        });
+
+    } catch (err) {
+        console.error(err);
+        listeAmisInvitation.innerHTML = '<p style="color:red; text-align:center;">Erreur de chargement.</p>';
+    }
+}
+
+// Fonction appelée quand on clique sur "Inviter"
+window.ajouterAmiAventure = async function(amiId, btnElement) {
+    btnElement.disabled = true;
+    btnElement.innerText = 'Envoi...';
+    
+    try {
+        const userId = pb.authStore.model.id;
+
+        // On crée une invitation d'aventure (et non plus un joueur direct)
+        await pb.collection('invitations_aventures').create({
+            aventure: aventureId,
+            demandeur: userId,
+            receveur: amiId
+        });
+
+        btnElement.innerText = 'Envoyé !';
+        btnElement.style.backgroundColor = '#2e8b57';
+        btnElement.style.borderColor = '#2e8b57';
+        
+    } catch (err) {
+        console.error("Erreur lors de l'invitation :", err);
+        alert("Erreur lors de l'invitation.");
+        btnElement.disabled = false;
+        btnElement.innerText = 'Inviter';
+    }
+}
+
+// ==========================================
+>>>>>>> featurehtml
 // GESTION DES JOUEURS (SIDEBAR)
 // ==========================================
 
@@ -75,7 +195,10 @@ async function chargerJoueurs(userId) {
             sort: 'created'
         });
 
+<<<<<<< HEAD
         // Si la liste est vide (ex: après suppression du dernier), on recrée un héros de base
+=======
+>>>>>>> featurehtml
         if (listeJoueurs.length === 0) {
             const nomParDefaut = pb.authStore.model.name || 'Héros Principal';
             const nouveauJoueur = await pb.collection('joueurs').create({
@@ -92,7 +215,10 @@ async function chargerJoueurs(userId) {
             listeJoueurs = [nouveauJoueur];
         }
 
+<<<<<<< HEAD
         // Si le joueur actif précédent a été supprimé, on prend le premier de la liste
+=======
+>>>>>>> featurehtml
         if (!joueurActif || !listeJoueurs.some(j => j.id === joueurActif.id)) {
             joueurActif = listeJoueurs[0];
         }
@@ -118,6 +244,7 @@ function afficherJoueurs() {
         div.style.justifyContent = 'space-between';
         div.style.alignItems = 'center';
         
+<<<<<<< HEAD
         // Le clic sur la case sélectionne le joueur
         div.onclick = () => selectionnerJoueur(joueur.id);
 
@@ -125,6 +252,13 @@ function afficherJoueurs() {
         const nomSafe = nom.replace(/'/g, "\\'"); // Sécurise les apostrophes pour le JS
         
         // Couleur du bouton et du texte selon si la ligne est active (noire) ou inactive (blanche)
+=======
+        div.onclick = () => selectionnerJoueur(joueur.id);
+
+        const nom = joueur.nom_provisoire || 'Héros sans nom';
+        const nomSafe = nom.replace(/'/g, "\\'"); 
+        
+>>>>>>> featurehtml
         const btnColor = estActif ? '#f4ecd8' : 'var(--encre-noire)';
         const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour gérer';
 
@@ -134,7 +268,10 @@ function afficherJoueurs() {
                 <small style="font-size: 0.75rem;">${sousTexte}</small>
             </div>
             
+<<<<<<< HEAD
             <!-- Menu 3 points -->
+=======
+>>>>>>> featurehtml
             <div class="action-menu-container" style="margin-left: auto;">
                 <button type="button" class="btn-dots" style="color: ${btnColor}; padding: 0.2rem 0.5rem;" onclick="toggleMenuJoueur(event, '${joueur.id}')">⋮</button>
                 <div id="menu-joueur-${joueur.id}" class="dropdown-menu">
@@ -151,6 +288,7 @@ function afficherJoueurs() {
     });
 }
 
+<<<<<<< HEAD
 // Ouvrir/fermer le menu d'un joueur
 function toggleMenuJoueur(event, joueurId) {
     event.stopPropagation(); // Empêche de sélectionner le joueur en cliquant sur les 3 points
@@ -164,11 +302,25 @@ function toggleMenuJoueur(event, joueurId) {
 }
 
 // Fermer les menus si on clique ailleurs sur la page
+=======
+function toggleMenuJoueur(event, joueurId) {
+    event.stopPropagation(); 
+    document.querySelectorAll('.dropdown-menu').forEach(m => {
+        if (m.id !== `menu-joueur-${joueurId}`) m.classList.remove('show');
+    });
+    const menu = document.getElementById(`menu-joueur-${joueurId}`);
+    if (menu) menu.classList.toggle('show');
+}
+
+>>>>>>> featurehtml
 window.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 });
 
+<<<<<<< HEAD
 // Modifier le nom d'un joueur
+=======
+>>>>>>> featurehtml
 async function renommerJoueur(event, joueurId, ancienNom) {
     event.stopPropagation();
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
@@ -177,22 +329,30 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     if (!nouveauNom || nouveauNom.trim() === "" || nouveauNom.trim() === ancienNom) return;
 
     try {
+<<<<<<< HEAD
         await pb.collection('joueurs').update(joueurId, {
             nom_provisoire: nouveauNom.trim()
         });
 
         // Mettre à jour l'affichage local sans recharger toute la base
+=======
+        await pb.collection('joueurs').update(joueurId, { nom_provisoire: nouveauNom.trim() });
+>>>>>>> featurehtml
         const j = listeJoueurs.find(j => j.id === joueurId);
         if (j) j.nom_provisoire = nouveauNom.trim();
 
         if (joueurActif && joueurActif.id === joueurId) {
             deckTitreJoueurEl.textContent = `Deck : ${nouveauNom.trim()}`;
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> featurehtml
         afficherJoueurs();
     } catch (err) {
         console.error("Erreur renommage :", err);
         alert("Impossible de renommer ce héros.");
+<<<<<<< HEAD
     }
 }
 
@@ -225,6 +385,31 @@ async function supprimerJoueur(event, joueurId, nom) {
 }
 
 // Ajouter un joueur depuis le formulaire
+=======
+    }
+}
+
+async function supprimerJoueur(event, joueurId, nom) {
+    event.stopPropagation();
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+
+    const conf = confirm(`Es-tu sûr de vouloir retirer "${nom}" de l'aventure ? Son deck sera supprimé définitivement.`);
+    if (!conf) return;
+
+    try {
+        const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurId}"` });
+        for (const d of decks) { await pb.collection('decks').delete(d.id); }
+        await pb.collection('joueurs').delete(joueurId);
+
+        const userId = pb.authStore.model.id;
+        await chargerJoueurs(userId);
+    } catch (err) {
+        console.error("Erreur suppression :", err);
+        alert("Erreur lors de la suppression du héros.");
+    }
+}
+
+>>>>>>> featurehtml
 if (formAjoutJoueur) {
     formAjoutJoueur.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -233,23 +418,29 @@ if (formAjoutJoueur) {
 
         try {
             const userId = pb.authStore.model.id;
+<<<<<<< HEAD
 
+=======
+>>>>>>> featurehtml
             const nouveauJoueur = await pb.collection('joueurs').create({
                 aventure: aventureId,
                 utilisateur: userId,
                 nom_provisoire: nom
             });
 
+<<<<<<< HEAD
             await pb.collection('decks').create({
                 joueur: nouveauJoueur.id,
                 cartes: DECK_DE_BASE
             });
 
+=======
+            await pb.collection('decks').create({ joueur: nouveauJoueur.id, cartes: DECK_DE_BASE });
+>>>>>>> featurehtml
             nouveauJoueurInput.value = '';
             listeJoueurs.push(nouveauJoueur);
             afficherJoueurs();
             await selectionnerJoueur(nouveauJoueur.id);
-
         } catch (err) {
             console.error("Erreur ajout joueur :", err);
             alert("Impossible de créer ce joueur.");
@@ -268,15 +459,22 @@ async function selectionnerJoueur(joueurId) {
     if (deckTitreJoueurEl && joueurActif) {
         deckTitreJoueurEl.textContent = `Deck : ${joueurActif.nom_provisoire || 'Héros'}`;
     }
+<<<<<<< HEAD
     if (searchDeckInput) {
         searchDeckInput.value = ''; // On vide la recherche quand on change de héros
     }
+=======
+    if (searchDeckInput) searchDeckInput.value = ''; 
+>>>>>>> featurehtml
 
     try {
         try {
             deckRecordActif = await pb.collection('decks').getFirstListItem(`joueur = "${joueurActif.id}"`);
         } catch (e) {
+<<<<<<< HEAD
             // C'est ici que l'on intègre le deck de base au lieu d'un deck vide
+=======
+>>>>>>> featurehtml
             deckRecordActif = await pb.collection('decks').create({
                 joueur: joueurActif.id,
                 cartes: DECK_DE_BASE
@@ -289,7 +487,10 @@ async function selectionnerJoueur(joueurId) {
             .filter(Boolean);
 
         afficherDeck();
+<<<<<<< HEAD
 
+=======
+>>>>>>> featurehtml
     } catch (err) {
         console.error("Erreur sélection joueur :", err);
     }
@@ -299,7 +500,10 @@ function afficherDeck() {
     if (!deckListeEl) return;
     deckListeEl.innerHTML = '';
     
+<<<<<<< HEAD
     // Le compteur et la valeur restent calculés sur TOUT le deck (même si on recherche)
+=======
+>>>>>>> featurehtml
     deckCountEl.textContent = `${cartesDuDeck.length} carte${cartesDuDeck.length > 1 ? 's' : ''}`;
     
     let valeurTotale = 0;
@@ -311,7 +515,10 @@ function afficherDeck() {
         return;
     }
 
+<<<<<<< HEAD
     // On prépare la liste à afficher (filtrée ou non)
+=======
+>>>>>>> featurehtml
     let listeAffichee = cartesDuDeck;
     const requeteRecherche = searchDeckInput && searchDeckInput.value ? searchDeckInput.value.toLowerCase().trim() : '';
 
@@ -331,9 +538,13 @@ function afficherDeck() {
     }
 
     listeAffichee.forEach((carte) => {
+<<<<<<< HEAD
         // On récupère l'index de la carte dans le VRAI deck pour la supprimer correctement
         const indexReel = cartesDuDeck.indexOf(carte);
 
+=======
+        const indexReel = cartesDuDeck.indexOf(carte);
+>>>>>>> featurehtml
         const item = document.createElement('div');
         item.className = 'card-item';
         item.innerHTML = `
@@ -387,7 +598,10 @@ function afficherCatalogue(liste) {
 // ACTIONS D'AJOUT ET SAUVEGARDE
 // ==========================================
 
+<<<<<<< HEAD
 // Ajouter une carte au deck du joueur actif
+=======
+>>>>>>> featurehtml
 async function ajouterAuDeck(cote) {
     if (!deckRecordActif) {
         alert("Veuillez sélectionner un joueur d'abord.");
@@ -397,21 +611,31 @@ async function ajouterAuDeck(cote) {
     const carteTrouvee = toutesLesCartes.find(c => c.cote === cote);
     if (!carteTrouvee) return;
 
+<<<<<<< HEAD
     // 1. Récupérer la limite d'exemplaires (on s'assure que c'est un nombre)
     const limite = parseInt(carteTrouvee.exemplaire) || 1;
 
     try {
         // 2. Créer un filtre pour cibler uniquement les decks des joueurs de CETTE aventure
+=======
+    const limite = parseInt(carteTrouvee.exemplaire) || 1;
+
+    try {
+>>>>>>> featurehtml
         const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
         let totalEnJeu = 0;
         
         if (filtres) {
+<<<<<<< HEAD
             // 3. Récupérer tous ces decks depuis la base de données
             const tousLesDecks = await pb.collection('decks').getFullList({
                 filter: filtres
             });
 
             // 4. Compter combien de fois cette carte est déjà distribuée au total
+=======
+            const tousLesDecks = await pb.collection('decks').getFullList({ filter: filtres });
+>>>>>>> featurehtml
             tousLesDecks.forEach(d => {
                 if (d.cartes && Array.isArray(d.cartes)) {
                     totalEnJeu += d.cartes.filter(c => c === cote).length;
@@ -419,18 +643,27 @@ async function ajouterAuDeck(cote) {
             });
         }
 
+<<<<<<< HEAD
         // 5. Bloquer si la limite d'exemplaires de l'aventure est atteinte
+=======
+>>>>>>> featurehtml
         if (totalEnJeu >= limite) {
             alert(`Limite atteinte pour "${carteTrouvee.nom}" !\n\nCette carte est limitée à ${limite} exemplaire(s) partagé(s) entre tous les héros de cette aventure.`);
             return; 
         }
+<<<<<<< HEAD
 
+=======
+>>>>>>> featurehtml
     } catch (err) {
         console.error("Erreur lors de la vérification de la limite :", err);
         return; 
     }
 
+<<<<<<< HEAD
     // 6. Si on n'a pas dépassé la limite, on ajoute la carte
+=======
+>>>>>>> featurehtml
     cartesDuDeck.push(carteTrouvee);
     afficherDeck();
     await sauvegarderDeck();
@@ -446,9 +679,7 @@ async function retirerDuDeck(index) {
 async function sauvegarderDeck() {
     try {
         const listeCotes = cartesDuDeck.map(c => c.cote);
-        await pb.collection('decks').update(deckRecordActif.id, {
-            cartes: listeCotes
-        });
+        await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes });
     } catch (err) {
         console.error("Erreur de sauvegarde :", err);
     }
@@ -474,7 +705,10 @@ if (searchInput) {
     });
 }
 
+<<<<<<< HEAD
 // Recherche instantanée dans le DECK
+=======
+>>>>>>> featurehtml
 if (searchDeckInput) {
     searchDeckInput.addEventListener('input', () => {
         afficherDeck();

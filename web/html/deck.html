@@ -131,14 +131,29 @@
         }
     </style>
 </head>
+<!-- On force l'affichage en bloc standard pour annuler le centrage global -->
 <body>
 
-    <header style="text-align: center; margin-top: 1rem;">
-        <a href="accueil.html" style="text-decoration: none; color: inherit;">
-            <img src="../image/logo_nomines.jpg" alt="Logo" style="max-width: 160px;">
+    <!-- BANNIÈRE HORIZONTALE EN HAUT -->
+    <header class="deck-header">
+        
+        <!-- Logo à gauche -->
+        <a href="accueil.html" class="header-logo-link">
+            <img src="../image/logo_nomines.jpg" alt="Logo">
         </a>
-        <h2 id="aventure-titre" style="font-family: 'Cinzel', serif; margin: 0.4rem 0 0.2rem 0;">Chargement de l'aventure…</h2>
-        <a href="accueil.html" style="font-size: 0.85rem;">← Retour aux aventures</a>
+
+        <!-- Titre au centre -->
+        <h2 id="aventure-titre">
+            Chargement de l'aventure…
+        </h2>
+
+        <!-- Bouton Quitter à droite -->
+        <div class="header-action">
+            <a href="accueil.html" class="btn-action btn-danger">
+                🚪 Quitter l'aventure
+            </a>
+        </div>
+        
     </header>
 
     <main class="deck-layout">
@@ -151,6 +166,26 @@
                 <input type="text" id="nouveau-joueur-nom" placeholder="Nom du héros..." required style="padding: 0.4rem; font-size: 0.85rem;">
                 <button type="submit" class="btn-action" style="width: 100%;">+ Ajouter un joueur</button>
             </form>
+            
+            <!-- Bouton pour ouvrir la liste d'amis -->
+            <button id="btn-inviter-ami" class="btn-action" style="padding: 0.4rem; font-size: 0.7rem; width: 100%; margin-bottom: 1.5rem;">+ Inviter un compagnon</button>
+
+            <!-- Modale cachée par défaut (le fond noir semi-transparent) -->
+            <div id="modal-invitation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+                
+                <!-- La carte parchemin au centre -->
+                <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 400px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    
+                    <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center;">Inviter un ami</h3>
+                    
+                    <!-- La liste s'affichera ici -->
+                    <div id="liste-amis-invitation" style="margin-top: 1rem; max-height: 250px; overflow-y: auto; padding-right: 0.5rem;">
+                        <p style="text-align: center; color: #666; font-style: italic;">Chargement de vos compagnons...</p>
+                    </div>
+                    
+                    <button id="fermer-modal-invitation" class="btn-action btn-danger" style="margin-top: 1.5rem; width: 100%;">Fermer</button>
+                </div>
+            </div>
 
             <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin-bottom: 0.4rem;">Sélectionnez un héros :</div>
             <div id="joueurs-liste" class="cards-scroll-container" style="margin-top: 0;">
@@ -191,6 +226,26 @@
         </section>
     </main>
 
+    <!-- Modale d'invitation -->
+    <div id="modal-invitation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 400px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center;">Inviter un compagnon</h3>
+            
+            <div id="liste-amis-invitation" style="margin-top: 1rem; max-height: 250px; overflow-y: auto; padding-right: 0.5rem;">
+                <p style="text-align: center; color: #666; font-style: italic;">Chargement...</p>
+            </div>
+            
+            <button id="fermer-modal-invitation" class="btn-action btn-danger" style="margin-top: 1.5rem; width: 100%;">Fermer</button>
+        </div>
+    </div>
+    <!-- PIED DE PAGE (FOOTER) -->
+    <footer class="game-footer">
+        <p>Créateurs du jeu : @Antoine Poullin & @Pierre Cailloux</p>
+        <p>Développeur : @Aurélien GIGUERRE</p>
+        <p style="margin-top: 1rem;">
+            <a href="mentions-legales.html" style="font-size: 0.8rem; opacity: 0.8;">Mentions Légales & RGPD</a>
+        </p>
+    </footer>
     <!-- PocketBase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
     <script src="../js/auth.js"></script>
