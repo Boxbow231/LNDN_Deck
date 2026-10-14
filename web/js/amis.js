@@ -20,7 +20,7 @@ async function initialiserPage() {
         return;
     }
 
-    // NOUVEAU : Afficher le nom de l'utilisateur
+    // Afficher le nom de l'utilisateur
     const userGreetingEl = document.getElementById('user-greeting');
     const userModel = pb.authStore.record || pb.authStore.model;
     if (userGreetingEl && userModel) {
@@ -45,7 +45,7 @@ btnRechercher.addEventListener('click', async () => {
         // A. On récupère TOUS les joueurs
         const tousLesUsers = await pb.collection('users').getFullList();
         
-        // B. NOUVEAU : On récupère toutes nos relations (amis + demandes en attente)
+        // B. On récupère toutes nos relations (amis + demandes en attente)
         const mesRelations = await pb.collection('amis').getFullList({
             filter: `demandeur = "${userId}" || receveur = "${userId}"`
         });
@@ -59,12 +59,12 @@ btnRechercher.addEventListener('click', async () => {
             const nom = (user.name || '').toLowerCase();
             if (!pseudo.includes(query) && !nom.includes(query)) return false;
 
-            // NOUVEAU : On vérifie si on est déjà en relation avec ce joueur
+            // On vérifie si on est déjà en relation avec ce joueur
             const dejaEnRelation = mesRelations.find(rel => 
                 rel.demandeur === user.id || rel.receveur === user.id
             );
             
-            // Si on est déjà en relation (ami ou en attente), on le cache de la recherche !
+            // Si on est déjà en relation (ami ou en attente), on le cache de la recherche
             if (dejaEnRelation) return false;
 
             return true; // Si tout est bon, on le garde
@@ -114,7 +114,7 @@ window.ajouterAmi = async function(receveurId) {
 
         if (dejaAmi) {
             alert("Une demande a déjà été envoyée ou vous êtes déjà amis avec ce joueur.");
-            return; // Bloque la création de doublons !
+            return; // Bloque la création de doublons
         }
 
         await pb.collection('amis').create({
@@ -148,6 +148,9 @@ async function chargerDemandes() {
 
         const mesDemandes = toutesRelations.filter(rel => rel.receveur === userId && rel.statut === 'attente');
 
+        // TRI : Ordre d'arrivée (les plus anciennes en premier)
+        mesDemandes.sort((a, b) => new Date(a.created) - new Date(b.created));
+
         demandesListe.innerHTML = '';
 
         if (mesDemandes.length === 0) {
@@ -160,7 +163,7 @@ async function chargerDemandes() {
             if (!demandeur) return; 
 
             const div = document.createElement('div');
-            // NOUVEAU : On donne un ID unique à cette ligne pour pouvoir la cibler et la supprimer instantanément
+            // ID unique à cette ligne pour pouvoir la cibler et la supprimer instantanément
             div.id = `demande-${demande.id}`;
             div.className = 'player-item';
             div.style.display = 'flex';
@@ -196,6 +199,21 @@ async function chargerAmis() {
             rel.statut === 'accepte'
         );
 
+        // TRI : Ordre alphabétique, puis ordre d'arrivée en cas d'égalité
+        mesAmis.sort((a, b) => {
+            const amiA = a.demandeur === userId ? a.expand?.receveur : a.expand?.demandeur;
+            const amiB = b.demandeur === userId ? b.expand?.receveur : b.expand?.demandeur;
+            
+            const nomA = (amiA?.username || amiA?.name || 'zzzz').toLowerCase();
+            const nomB = (amiB?.username || amiB?.name || 'zzzz').toLowerCase();
+            
+            if (nomA < nomB) return -1;
+            if (nomA > nomB) return 1;
+            
+            // Si les noms sont identiques, on trie par date de création (ordre d'arrivée)
+            return new Date(a.created) - new Date(b.created);
+        });
+
         amisListe.innerHTML = '';
 
         if (mesAmis.length === 0) {
@@ -229,7 +247,7 @@ async function chargerAmis() {
 
 // 5. Actions : Accepter, Refuser, Supprimer
 window.accepterDemande = async function(idAmiTable) {
-    // 1. EFFET VISUEL IMMÉDIAT : on supprime la ligne de l'écran instantanément
+    // EFFET VISUEL IMMÉDIAT : on supprime la ligne de l'écran instantanément
     const ligne = document.getElementById(`demande-${idAmiTable}`);
     if (ligne) ligne.remove();
 
@@ -238,10 +256,10 @@ window.accepterDemande = async function(idAmiTable) {
         demandesListe.innerHTML = '<p style="text-align: center; font-style: italic; color: #666;">Aucune demande en attente.</p>';
     }
 
-    // 2. Traitement en arrière-plan
+    // Traitement en arrière-plan
     try {
         await pb.collection('amis').update(idAmiTable, { statut: 'accepte' });
-        // On rafraîchit la liste d'amis à droite pour voir le nouveau compagnon apparaître
+        // On rafraîchit la liste d'amis à droite pour voir le nouveau compagnon apparaître (qui sera trié automatiquement)
         chargerAmis();
     } catch (err) {
         console.error(err);

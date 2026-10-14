@@ -26,20 +26,14 @@ const DECKS_DE_BASE = {
 let slotInvitationEnCours = null;
 const MAX_JOUEURS = 4;
 
-// 3. Éléments DOM classiques
+// 3. Éléments DOM
 const titreAventureEl = document.getElementById('aventure-titre');
 const joueursListeEl = document.getElementById('joueurs-liste');
-const formAjoutJoueur = document.getElementById('form-ajout-joueur');
-const nouveauJoueurInput = document.getElementById('nouveau-joueur-nom');
-
 const deckTitreJoueurEl = document.getElementById('deck-titre-joueur');
 const deckListeEl = document.getElementById('deck-cartes-liste');
 const deckCountEl = document.getElementById('deck-count');
-
 const catalogueListeEl = document.getElementById('catalogue-cartes-liste');
 const searchInput = document.getElementById('search-input');
-
-const btnInviter = document.getElementById('btn-inviter-ami');
 const modalInvitation = document.getElementById('modal-invitation');
 const listeAmisInvitation = document.getElementById('liste-amis-invitation');
 const btnFermerModal = document.getElementById('fermer-modal-invitation');
@@ -49,25 +43,16 @@ const btnFermerModal = document.getElementById('fermer-modal-invitation');
 // ==========================================
 
 function afficherInvites() {
+    const zoneInvitesContainer = document.getElementById('zone-invites-container');
     const invitesListeEl = document.getElementById('invites-liste');
     
-    // On cible la boîte globale qui contient aussi le titre
-    const zoneInvitesContainer = document.getElementById('zone-invites-container');
-    
-    const estCreateur = (pb.authStore.model.id === createurAventureId);
+    const userId = pb.authStore.model.id;
+    const estCreateur = (userId === createurAventureId);
 
-    // Si le joueur N'EST PAS le créateur, on cache TOUT
     if (!estCreateur) {
-        if (zoneInvitesContainer) {
-            zoneInvitesContainer.style.display = 'none';
-        } else if (invitesListeEl) {
-            // Sécurité au cas où le HTML n'est pas encore à jour
-            invitesListeEl.style.display = 'none';
-            if (invitesListeEl.previousElementSibling) invitesListeEl.previousElementSibling.style.display = 'none';
-        }
-        return; // On arrête la fonction ici
+        if (zoneInvitesContainer) zoneInvitesContainer.style.display = 'none';
+        return; 
     } else {
-        // Si on est le créateur, on affiche la zone
         if (zoneInvitesContainer) zoneInvitesContainer.style.display = 'block';
     }
 
@@ -80,19 +65,16 @@ function afficherInvites() {
     }
 
     participantsAventure.forEach(part => {
-        // On n'affiche pas le créateur dans la liste des invités à gérer
         if (part.utilisateur === createurAventureId) return;
 
         const nom = part.expand?.utilisateur?.username || part.expand?.utilisateur?.name || 'Inconnu';
         
-        let htmlDroits = `
-            <select onchange="changerDroitParticipant('${part.id}', this.value)" style="font-size: 0.7rem; padding: 0.2rem; width: 100%; margin-bottom: 0.3rem; border: 1px solid var(--encre-noire);">
-                <option value="spectateur" ${part.permission === 'spectateur' ? 'selected' : ''}>👁️ Juste regarder</option>
-                <option value="deck" ${part.permission === 'deck' ? 'selected' : ''}>🃏 Modifier son deck</option>
-                <option value="admin" ${part.permission === 'admin' ? 'selected' : ''}>👑 Gérer les héros (Admin)</option>
-            </select>
-            <button class="btn-action btn-danger" onclick="expulserParticipant('${part.id}', '${nom}')" style="font-size: 0.7rem; padding: 0.2rem; width: 100%;">Expulser</button>
-        `;
+        let htmlDroits = '<select onchange="changerDroitParticipant(\'' + part.id + '\', this.value)" style="font-size: 0.7rem; padding: 0.2rem; width: 100%; margin-bottom: 0.3rem; border: 1px solid var(--encre-noire);">' +
+            '<option value="spectateur" ' + (part.permission === 'spectateur' ? 'selected' : '') + '>👁️ Juste regarder</option>' +
+            '<option value="deck" ' + (part.permission === 'deck' ? 'selected' : '') + '>🃏 Modifier les decks</option>' +
+            '<option value="admin" ' + (part.permission === 'admin' ? 'selected' : '') + '>👑 Gérer les héros (Admin)</option>' +
+        '</select>' +
+        '<button class="btn-action btn-danger" onclick="expulserParticipant(\'' + part.id + '\', \'' + nom + '\')" style="font-size: 0.7rem; padding: 0.2rem; width: 100%;">Expulser</button>';
 
         const div = document.createElement('div');
         div.className = 'player-item';
@@ -101,10 +83,8 @@ function afficherInvites() {
         div.style.alignItems = 'flex-start';
         div.style.gap = '0.4rem';
 
-        div.innerHTML = `
-            <div style="font-weight: bold; font-size: 0.85rem;">👤 ${nom}</div>
-            <div style="width: 100%;">${htmlDroits}</div>
-        `;
+        div.innerHTML = '<div style="font-weight: bold; font-size: 0.85rem;">👤 ' + nom + '</div>' +
+                        '<div style="width: 100%;">' + htmlDroits + '</div>';
         invitesListeEl.appendChild(div);
     });
 }
@@ -128,7 +108,6 @@ async function chargerParticipants() {
 
         afficherInvites();
     } catch(e) {
-        console.warn("La table participants est vide ou inaccessible", e);
         participantsAventure = [];
         afficherInvites();
     }
@@ -143,13 +122,25 @@ window.changerDroitParticipant = async function(id, nouvellePermission) {
 };
 
 window.expulserParticipant = async function(id, nom) {
-    if (!confirm(`Veux-tu vraiment expulser ${nom} de l'aventure ? Il n'y aura plus accès.`)) return;
+    if (!confirm(`Veux-tu vraiment expulser ${nom} de l'aventure ? Son héros et son deck seront définitivement supprimés.`)) return;
     try {
+        const part = participantsAventure.find(p => p.id === id);
+        if (part) {
+            const joueurAssocie = listeJoueurs.find(j => j.utilisateur === part.utilisateur);
+            if (joueurAssocie) {
+                const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurAssocie.id}"` });
+                for (const d of decks) { await pb.collection('decks').delete(d.id); }
+                await pb.collection('joueurs').delete(joueurAssocie.id);
+            }
+        }
         await pb.collection('participants').delete(id);
         participantsAventure = participantsAventure.filter(p => p.id !== id);
+        
+        await chargerJoueurs(pb.authStore.model.id);
         afficherInvites();
     } catch(e) {
         alert("Erreur lors de l'expulsion.");
+        console.error(e);
     }
 };
 
@@ -172,13 +163,11 @@ async function initialiserPage() {
     try {
         const userId = pb.authStore.model.id;
 
-        // Étape 1 : Charger l'aventure d'abord
         const aventure = await pb.collection('aventures').getOne(aventureId);
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
 
         createurAventureId = aventure.createur; 
 
-        // Étape 2 : Vérifier / Créer le participant créateur en toute sécurité
         try {
             const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
             if (!dejaParticipant) {
@@ -198,15 +187,15 @@ async function initialiserPage() {
 
         await chargerParticipants(); 
 
-        // Étape 3 : Charger le catalogue complet
         toutesLesCartes = await pb.collection('cartes_butins').getFullList({
             sort: 'cote'
         });
 
-        // Étape 4 : Charger les joueurs et les decks
         await chargerJoueurs(userId);
         await majCompteCartes();
         afficherCatalogue(toutesLesCartes);
+        
+        afficherInvites();
 
     } catch (err) {
         console.error("Erreur d'initialisation :", err);
@@ -217,16 +206,12 @@ async function initialiserPage() {
 // ==========================================
 // GESTION DES INVITATIONS D'AMIS
 // ==========================================
-if (btnInviter) {
-    btnInviter.addEventListener('click', async () => {
-        if (listeJoueurs.length >= MAX_JOUEURS) {
-            alert(`Le groupe est complet ! Vous avez déjà atteint la limite de ${MAX_JOUEURS} héros.`);
-            return;
-        }
-        modalInvitation.style.display = 'flex';
-        await chargerAmisPourInvitation();
-    });
-}
+
+window.ouvrirModalInvitation = async function(slotId) {
+    slotInvitationEnCours = slotId;
+    modalInvitation.style.display = 'flex';
+    await chargerAmisPourInvitation();
+};
 
 if (btnFermerModal) {
     btnFermerModal.addEventListener('click', () => {
@@ -272,20 +257,12 @@ async function chargerAmisPourInvitation() {
             div.style.borderBottom = '1px dashed var(--encre-noire)';
 
             if (estDejaDansLaventure) {
-                div.innerHTML = `
-                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
-                    <span style="color: #666; font-style: italic; font-size: 0.85rem;">Déjà présent</span>
-                `;
+                div.innerHTML = '<strong style="font-family: \'Cinzel\', serif;">' + (ami.username || ami.name) + '</strong><span style="color: #666; font-style: italic; font-size: 0.85rem;">Déjà présent</span>';
             } else if (estDejaInvite) {
-                div.innerHTML = `
-                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
-                    <span style="color: #b8860b; font-style: italic; font-size: 0.85rem;">En attente...</span>
-                `;
+                div.innerHTML = '<strong style="font-family: \'Cinzel\', serif;">' + (ami.username || ami.name) + '</strong><span style="color: #b8860b; font-style: italic; font-size: 0.85rem;">En attente...</span>';
             } else {
-                div.innerHTML = `
-                    <strong style="font-family: 'Cinzel', serif;">${ami.username || ami.name}</strong>
-                    <button class="btn-action" onclick="ajouterAmiAventure('${ami.id}', this)" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; width: auto;">Inviter</button>
-                `;
+                div.innerHTML = '<strong style="font-family: \'Cinzel\', serif;">' + (ami.username || ami.name) + '</strong>' +
+                                '<button class="btn-action" onclick="ajouterAmiAventure(\'' + ami.id + '\', this)" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; width: auto;">Inviter</button>';
             }
             listeAmisInvitation.appendChild(div);
         });
@@ -305,12 +282,15 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
         await pb.collection('invitations_aventures').create({
             aventure: aventureId,
             demandeur: userId,
-            receveur: amiId
+            receveur: amiId,
+            emplacement: parseInt(slotInvitationEnCours)
         });
 
         btnElement.innerText = 'Envoyé !';
         btnElement.style.backgroundColor = '#2e8b57';
         btnElement.style.borderColor = '#2e8b57';
+        
+        await chargerJoueurs(userId);
     } catch (err) {
         console.error("Erreur lors de l'invitation :", err);
         alert("Erreur lors de l'invitation.");
@@ -328,7 +308,8 @@ async function chargerJoueurs(userId) {
         listeJoueurs = await pb.collection('joueurs').getFullList({ filter: `aventure = "${aventureId}"`, sort: 'created' });
         
         invitationsAventure = await pb.collection('invitations_aventures').getFullList({
-            filter: `aventure = "${aventureId}"`
+            filter: `aventure = "${aventureId}"`,
+            expand: 'receveur'
         });
 
         let slotsOccupes = listeJoueurs.map(j => j.emplacement).filter(e => e);
@@ -362,43 +343,64 @@ function afficherJoueurs() {
         const invitationEnAttente = invitationsAventure.find(inv => parseInt(inv.emplacement) === i);
         
         const div = document.createElement('div');
-        const peutGererHeros = (mesDroits === 'admin' || mesDroits === 'createur');
         
         if (joueurSlot) {
             const estActif = joueurActif && joueurActif.id === joueurSlot.id;
-            div.className = `player-item ${estActif ? 'active' : ''}`;
+            div.className = 'player-item ' + (estActif ? 'active' : '');
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
             div.onclick = () => selectionnerJoueur(joueurSlot.id);
 
-            const nom = joueurSlot.nom_provisoire || `Héros ${i}`;
+            const nom = joueurSlot.nom_provisoire || ('Héros ' + i);
             const nomSafe = nom.replace(/'/g, "\\'"); 
             const btnColor = estActif ? '#f4ecd8' : 'var(--encre-noire)';
-            const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour gérer';
+            const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour voir';
 
-            let menuHtml = '';
-            if (peutGererHeros) {
-                menuHtml = `
-                    <div class="action-menu-container" style="margin-left: auto;">
-                        <button type="button" class="btn-dots" style="color: ${btnColor}; padding: 0.2rem 0.5rem;" onclick="toggleMenuJoueur(event, '${joueurSlot.id}')">⋮</button>
-                        <div id="menu-joueur-${joueurSlot.id}" class="dropdown-menu">
-                            <button type="button" class="dropdown-item" onclick="renommerJoueur(event, '${joueurSlot.id}', '${nomSafe}')">✏️ Renommer</button>
-                            <button type="button" class="dropdown-item danger" onclick="supprimerJoueur(event, '${joueurSlot.id}', '${nomSafe}')">🗑️ Retirer</button>
-                        </div>
-                    </div>
-                `;
+            // IDENTIFICATION CLAIRE DES TYPES DE JOUEURS
+            const estCreateurMainSlot = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) === 1);
+            const estSansCompte = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) !== 1);
+            const estMonSlot = (joueurSlot.utilisateur === pb.authStore.model.id);
+
+            let afficherBoutonRenommer = false;
+            let afficherBoutonRetirer = false;
+
+            // LOGIQUE DE SÉCURITÉ POUR LES 3 POINTS
+            if (mesDroits === 'createur') {
+                afficherBoutonRenommer = true;
+                if (!estCreateurMainSlot) afficherBoutonRetirer = true; // Le créateur supprime tout le monde sauf lui-même
+            } else if (mesDroits === 'admin') {
+                afficherBoutonRenommer = true;
+                if (estSansCompte) afficherBoutonRetirer = true; // L'Admin supprime QUE les héros "sans compte"
+            } else if (mesDroits === 'deck') {
+                if (estMonSlot) afficherBoutonRenommer = true; // L'invité de base ne renomme QUE lui-même et ne supprime rien
             }
 
-            div.innerHTML = `
-                <div>
-                    <div style="font-size: 0.65rem; color: ${estActif ? '#dcd0b8' : '#888'};">Emplacement ${i}</div>
-                    <div>${nom}</div>
-                    <small style="font-size: 0.75rem;">${sousTexte}</small>
-                </div>
-                ${menuHtml}
-            `;
+            let menuHtml = '';
+            if (afficherBoutonRenommer || afficherBoutonRetirer) {
+                menuHtml += '<div class="action-menu-container" style="margin-left: auto;">' +
+                    '<button type="button" class="btn-dots" style="color: ' + btnColor + '; padding: 0.2rem 0.5rem;" onclick="toggleMenuJoueur(event, \'' + joueurSlot.id + '\')">⋮</button>' +
+                    '<div id="menu-joueur-' + joueurSlot.id + '" class="dropdown-menu">';
+                    
+                if (afficherBoutonRenommer) {
+                    menuHtml += '<button type="button" class="dropdown-item" onclick="renommerJoueur(event, \'' + joueurSlot.id + '\', \'' + nomSafe + '\')">✏️ Renommer</button>';
+                }
+                if (afficherBoutonRetirer) {
+                    menuHtml += '<button type="button" class="dropdown-item danger" onclick="supprimerJoueur(event, \'' + joueurSlot.id + '\', \'' + nomSafe + '\')">🗑️ Retirer</button>';
+                }
+                
+                menuHtml += '</div></div>';
+            }
+
+            div.innerHTML = '<div>' +
+                    '<div style="font-size: 0.65rem; color: ' + (estActif ? '#dcd0b8' : '#888') + ';">Emplacement ' + i + '</div>' +
+                    '<div>' + nom + '</div>' +
+                    '<small style="font-size: 0.75rem;">' + sousTexte + '</small>' +
+                '</div>' +
+                menuHtml;
         } else if (invitationEnAttente) {
+            const nomInvite = invitationEnAttente.expand?.receveur?.username || invitationEnAttente.expand?.receveur?.name || 'un ami';
+            
             div.className = 'player-item';
             div.style.display = 'flex';
             div.style.flexDirection = 'column';
@@ -407,11 +409,15 @@ function afficherJoueurs() {
             div.style.backgroundColor = 'rgba(218, 165, 32, 0.15)'; 
             div.style.border = '1px dashed #daa520';
 
-            div.innerHTML = `
-                <div style="font-size: 0.8rem; font-weight: bold; color: #b8860b; text-align: center;">Emplacement ${i} (En attente)</div>
-                <div style="font-size: 0.75rem; text-align: center; color: #666; font-style: italic;">Invitation envoyée...</div>
-                ${peutGererHeros ? `<button class="btn-action btn-danger" onclick="annulerInvitationSlot('\${invitationEnAttente.id}')" style="font-size: 0.75rem; padding: 0.3rem; margin-top: 0.3rem;">Annuler l'invitation</button>` : ''}
-            `;
+            const peutInviter = (mesDroits === 'createur' || mesDroits === 'admin');
+            let btnAnnuler = '';
+            if (peutInviter) {
+                btnAnnuler = '<button class="btn-action btn-danger" onclick="annulerInvitationSlot(\'' + invitationEnAttente.id + '\')" style="font-size: 0.75rem; padding: 0.3rem; margin-top: 0.3rem;">Annuler l\'invitation</button>';
+            }
+
+            div.innerHTML = '<div style="font-size: 0.8rem; font-weight: bold; color: #b8860b; text-align: center;">Emplacement ' + i + ' (Réservé)</div>' +
+                            '<div style="font-size: 0.75rem; text-align: center; color: #666; font-style: italic;">En attente de ' + nomInvite + '...</div>' +
+                            btnAnnuler;
         } else {
             div.className = 'player-item';
             div.style.display = 'flex';
@@ -420,21 +426,30 @@ function afficherJoueurs() {
             div.style.cursor = 'default';
             div.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
 
+            // Seuls l'Admin et le Créateur ont le droit de modifier la structure de l'équipe
+            const peutCreer = (mesDroits === 'createur' || mesDroits === 'admin');
+            const peutInviter = (mesDroits === 'createur' || mesDroits === 'admin');
+            
+            let inputHtml = '';
             let boutonsCreationHtml = '';
-            if (mesDroits !== 'spectateur') {
-                boutonsCreationHtml = `
-                    <div style="display: flex; gap: 0.3rem;">
-                        <button class="btn-action" onclick="creerJoueurSlot(${i})" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Créer</button>
-                        <button class="btn-action" onclick="ouvrirModalInvitation(${i})" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Inviter</button>
-                    </div>
-                `;
+            
+            if (peutCreer) { 
+                inputHtml = '<input type="text" id="input-slot-' + i + '" placeholder="Nom du héros ' + i + '..." style="padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire);">';
+                
+                let boutonInviterHtml = '';
+                if (peutInviter) {
+                    boutonInviterHtml = '<button class="btn-action" onclick="ouvrirModalInvitation(' + i + ')" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Inviter</button>';
+                }
+
+                boutonsCreationHtml = '<div style="display: flex; gap: 0.3rem;">' +
+                    '<button class="btn-action" onclick="creerJoueurSlot(' + i + ')" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Créer</button>' +
+                    boutonInviterHtml +
+                '</div>';
             }
 
-            div.innerHTML = `
-                <div style="font-size: 0.8rem; font-weight: bold; color: #666; text-align: center;">Emplacement ${i} (Libre)</div>
-                ${mesDroits !== 'spectateur' ? `<input type="text" id="input-slot-\${i}" placeholder="Nom du héros ${i}..." style="padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire);">` : ''}
-                ${boutonsCreationHtml}
-            `;
+            div.innerHTML = '<div style="font-size: 0.8rem; font-weight: bold; color: #666; text-align: center;">Emplacement ' + i + ' (Libre)</div>' + 
+                            inputHtml + 
+                            boutonsCreationHtml;
         }
         
         joueursListeEl.appendChild(div);
@@ -442,15 +457,14 @@ function afficherJoueurs() {
 }
 
 window.creerJoueurSlot = async function(slotId) {
-    const input = document.getElementById(`input-slot-${slotId}`);
-    const nom = input.value.trim();
+    const input = document.getElementById('input-slot-' + slotId);
+    const nom = input ? input.value.trim() : '';
     if (!nom) { alert("Veuillez entrer un nom pour ce héros."); return; }
 
     try {
-        const userId = pb.authStore.model.id;
         const nouveauJoueur = await pb.collection('joueurs').create({
             aventure: aventureId,
-            utilisateur: userId,
+            utilisateur: createurAventureId, 
             nom_provisoire: nom,
             emplacement: parseInt(slotId) 
         });
@@ -483,18 +497,12 @@ window.annulerInvitationSlot = async function(invitationId) {
     }
 };
 
-window.ouvrirModalInvitation = async function(slotId) {
-    slotInvitationEnCours = slotId;
-    modalInvitation.style.display = 'flex';
-    await chargerAmisPourInvitation();
-};
-
 function toggleMenuJoueur(event, joueurId) {
     event.stopPropagation(); 
     document.querySelectorAll('.dropdown-menu').forEach(m => {
-        if (m.id !== `menu-joueur-${joueurId}`) m.classList.remove('show');
+        if (m.id !== 'menu-joueur-' + joueurId) m.classList.remove('show');
     });
-    const menu = document.getElementById(`menu-joueur-${joueurId}`);
+    const menu = document.getElementById('menu-joueur-' + joueurId);
     if (menu) menu.classList.toggle('show');
 }
 
@@ -506,6 +514,13 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     event.stopPropagation();
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 
+    // Sécurité backend-like
+    const joueurARenommer = listeJoueurs.find(j => j.id === joueurId);
+    if (joueurARenommer && mesDroits === 'deck' && joueurARenommer.utilisateur !== pb.authStore.model.id) {
+        alert("Vous ne pouvez renommer que votre propre héros.");
+        return;
+    }
+
     const nouveauNom = prompt("Entrez le nouveau nom du héros :", ancienNom);
     if (!nouveauNom || nouveauNom.trim() === "" || nouveauNom.trim() === ancienNom) return;
 
@@ -515,7 +530,7 @@ async function renommerJoueur(event, joueurId, ancienNom) {
         if (j) j.nom_provisoire = nouveauNom.trim();
 
         if (joueurActif && joueurActif.id === joueurId) {
-            deckTitreJoueurEl.textContent = `Deck : ${nouveauNom.trim()}`;
+            deckTitreJoueurEl.textContent = 'Deck : ' + nouveauNom.trim();
         }
         afficherJoueurs();
     } catch (err) {
@@ -528,19 +543,50 @@ async function supprimerJoueur(event, joueurId, nom) {
     event.stopPropagation();
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 
-    const conf = confirm(`Es-tu sûr de vouloir retirer "${nom}" de l'aventure ? Son deck sera supprimé définitivement.`);
+    const joueurASupprimer = listeJoueurs.find(j => j.id === joueurId);
+    if (!joueurASupprimer) return;
+
+    const estCreateurMainSlot = (joueurASupprimer.utilisateur === createurAventureId && parseInt(joueurASupprimer.emplacement) === 1);
+    const estSansCompte = (joueurASupprimer.utilisateur === createurAventureId && parseInt(joueurASupprimer.emplacement) !== 1);
+
+    if (mesDroits === 'spectateur' || mesDroits === 'deck') {
+        alert("Vous n'avez pas les droits pour supprimer un héros.");
+        return;
+    }
+    if (mesDroits === 'admin' && !estSansCompte) {
+        alert("En tant qu'Admin, vous ne pouvez retirer que les héros créés localement (sans compte).");
+        return;
+    }
+    if (estCreateurMainSlot) {
+        alert("Le héros principal du créateur ne peut pas être supprimé. Si vous souhaitez arrêter, supprimez l'aventure depuis l'accueil.");
+        return;
+    }
+
+    const conf = confirm('Es-tu sûr de vouloir retirer "' + nom + '" de l\'aventure ? Son deck sera supprimé définitivement.');
     if (!conf) return;
 
     try {
-        const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurId}"` });
+        if (!estSansCompte) {
+            const part = participantsAventure.find(p => p.utilisateur === joueurASupprimer.utilisateur);
+            if (part) {
+                await pb.collection('participants').delete(part.id);
+            }
+        }
+
+        const decks = await pb.collection('decks').getFullList({ filter: 'joueur = "' + joueurId + '"' });
         for (const d of decks) { await pb.collection('decks').delete(d.id); }
         await pb.collection('joueurs').delete(joueurId);
 
+        if (joueurActif && joueurActif.id === joueurId) {
+            joueurActif = null;
+        }
+
         const userId = pb.authStore.model.id;
+        await chargerParticipants();
         await chargerJoueurs(userId);
     } catch (err) {
         console.error("Erreur suppression :", err);
-        alert("Erreur lors de la suppression du héros.");
+        alert("Erreur lors de la suppression du héros. Assurez-vous d'avoir les droits nécessaires dans PocketBase.");
     }
 }
 
@@ -553,13 +599,13 @@ async function selectionnerJoueur(joueurId) {
     afficherJoueurs();
 
     if (deckTitreJoueurEl && joueurActif) {
-        deckTitreJoueurEl.textContent = `Deck : ${joueurActif.nom_provisoire || 'Héros'}`;
+        deckTitreJoueurEl.textContent = 'Deck : ' + (joueurActif.nom_provisoire || 'Héros');
     }
     if (searchDeckInput) searchDeckInput.value = ''; 
 
     try {
         try {
-            deckRecordActif = await pb.collection('decks').getFirstListItem(`joueur = "${joueurActif.id}"`);
+            deckRecordActif = await pb.collection('decks').getFirstListItem('joueur = "' + joueurActif.id + '"');
         } catch (e) {
             const deckDeDepart = DECKS_DE_BASE[joueurActif.emplacement] || DECKS_DE_BASE[1];
             deckRecordActif = await pb.collection('decks').create({
@@ -583,7 +629,7 @@ function afficherDeck() {
     if (!deckListeEl) return;
     deckListeEl.innerHTML = '';
     
-    deckCountEl.textContent = `${cartesDuDeck.length} carte${cartesDuDeck.length > 1 ? 's' : ''}`;
+    deckCountEl.textContent = cartesDuDeck.length + ' carte' + (cartesDuDeck.length > 1 ? 's' : '');
     
     let valeurTotale = 0;
     cartesDuDeck.forEach(c => valeurTotale += parseInt(c.valeur) || 0);
@@ -612,23 +658,21 @@ function afficherDeck() {
         return;
     }
 
+    const isSpectateur = (mesDroits === 'spectateur');
+
     listeAffichee.forEach((carte) => {
         const indexReel = cartesDuDeck.indexOf(carte);
         const item = document.createElement('div');
         item.className = 'card-item';
-        item.innerHTML = `
-            <div class="card-details">
-                <h4><span class="card-badge">${carte.cote}</span> ${carte.nom}</h4>
-                <p><strong>Effet :</strong> ${carte.effet || 'Aucun'}</p>
-                <p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
-                    <small style="color: #666;">Zone : ${carte.zone || 'Inconnue'} | Type : ${carte.type || '-'}</small>
-                    <strong style="color: #8b0000; font-size: 0.9rem;">Val: ${carte.valeur || 0}</strong>
-                </p>
-            </div>
-            <button type="button" class="btn-action btn-danger" onclick="retirerDuDeck(${indexReel})">
-                Retirer
-            </button>
-        `;
+        item.innerHTML = '<div class="card-details">' +
+                '<h4><span class="card-badge">' + carte.cote + '</span> ' + carte.nom + '</h4>' +
+                '<p><strong>Effet :</strong> ' + (carte.effet || 'Aucun') + '</p>' +
+                '<p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">' +
+                    '<small style="color: #666;">Zone : ' + (carte.zone || 'Inconnue') + ' | Type : ' + (carte.type || '-') + '</small>' +
+                    '<strong style="color: #8b0000; font-size: 0.9rem;">Val: ' + (carte.valeur || 0) + '</strong>' +
+                '</p>' +
+            '</div>' +
+            (isSpectateur ? '' : '<button type="button" class="btn-action btn-danger" onclick="retirerDuDeck(' + indexReel + ')">Retirer</button>');
         deckListeEl.appendChild(item);
     });
 }
@@ -641,32 +685,30 @@ function afficherCatalogue(liste) {
         catalogueListeEl.innerHTML = '<p style="text-align: center; font-style: italic;">Aucune carte trouvée.</p>';
         return;
     }
+    
+    const isSpectateur = (mesDroits === 'spectateur');
 
     liste.forEach(carte => {
         const limite = parseInt(carte.exemplaire) || 1;
         const utilisees = compteCartesUtilisees[carte.cote] || 0;
         const dispo = limite - utilisees;
         
-        const btnDisabled = dispo <= 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
+        const btnDisabled = (dispo <= 0 || isSpectateur) ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
         const texteDispo = dispo > 0 
-            ? `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>` 
-            : `<span style="color: #8b0000; font-weight: bold;">0/${limite} dispo</span>`;
+            ? '<span style="color: #2e8b57; font-weight: bold;">' + dispo + '/' + limite + ' dispo</span>' 
+            : '<span style="color: #8b0000; font-weight: bold;">0/' + limite + ' dispo</span>';
 
         const item = document.createElement('div');
         item.className = 'card-item';
-        item.innerHTML = `
-            <div class="card-details" style="width: 100%;">
-                <h4><span class="card-badge">${carte.cote}</span> ${carte.nom}</h4>
-                <p><strong>Effet :</strong> ${carte.effet || 'Aucun'}</p>
-                <p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
-                    <small style="color: #666;">Zone : ${carte.zone || 'Inconnue'} | Type : ${carte.type || '-'}</small>
-                    <small>${texteDispo}</small>
-                </p>
-            </div>
-            <button type="button" class="btn-action" onclick="ajouterAuDeck('${carte.cote}')" ${btnDisabled}>
-                + Ajouter
-            </button>
-        `;
+        item.innerHTML = '<div class="card-details" style="width: 100%;">' +
+                '<h4><span class="card-badge">' + carte.cote + '</span> ' + carte.nom + '</h4>' +
+                '<p><strong>Effet :</strong> ' + (carte.effet || 'Aucun') + '</p>' +
+                '<p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">' +
+                    '<small style="color: #666;">Zone : ' + (carte.zone || 'Inconnue') + ' | Type : ' + (carte.type || '-') + '</small>' +
+                    '<small>' + texteDispo + '</small>' +
+                '</p>' +
+            '</div>' +
+            '<button type="button" class="btn-action" onclick="ajouterAuDeck(\'' + carte.cote + '\')" ' + btnDisabled + '>+ Ajouter</button>';
         catalogueListeEl.appendChild(item);
     });
 }
@@ -681,6 +723,10 @@ function rafraichirCatalogueAffichage() {
 }
 
 async function ajouterAuDeck(cote) {
+    if (mesDroits === 'spectateur') {
+        alert("Mode lecture seule : vous n'avez pas l'autorisation de modifier ce deck.");
+        return;
+    }
     if (!deckRecordActif) {
         alert("Veuillez sélectionner un joueur d'abord.");
         return;
@@ -693,7 +739,7 @@ async function ajouterAuDeck(cote) {
     const utilisees = compteCartesUtilisees[cote] || 0;
 
     if (utilisees >= limite) {
-        alert(`Limite atteinte pour "${carteTrouvee.nom}" !\n\nCette carte est limitée à ${limite} exemplaire(s) partagé(s) entre tous les héros de cette aventure.`);
+        alert('Limite atteinte pour "' + carteTrouvee.nom + '" !\n\nCette carte est limitée à ' + limite + ' exemplaire(s) partagé(s) entre tous les héros de cette aventure.');
         return; 
     }
 
@@ -705,6 +751,10 @@ async function ajouterAuDeck(cote) {
 }
 
 async function retirerDuDeck(index) {
+    if (mesDroits === 'spectateur') {
+        alert("Mode lecture seule : vous n'avez pas l'autorisation de modifier ce deck.");
+        return;
+    }
     if (!deckRecordActif) return;
     
     const carteRetiree = cartesDuDeck[index];
@@ -732,7 +782,7 @@ async function majCompteCartes() {
     compteCartesUtilisees = {};
     if (listeJoueurs.length === 0) return;
     
-    const filtres = listeJoueurs.map(j => `joueur = "${j.id}"`).join(' || ');
+    const filtres = listeJoueurs.map(j => 'joueur = "' + j.id + '"').join(' || ');
     try {
         const decks = await pb.collection('decks').getFullList({ filter: filtres });
         decks.forEach(d => {
@@ -773,5 +823,4 @@ if (searchDeckInput) {
     });
 }
 
-// Lancement principal au chargement du fichier
 initialiserPage();
