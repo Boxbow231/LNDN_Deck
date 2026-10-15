@@ -91,7 +91,6 @@ function afficherInvites() {
 
         const div = document.createElement('div');
         div.className = 'player-item';
-        // FORCE l'affichage en colonne pour contrer le CSS Mobile
         div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.4rem;';
 
         div.innerHTML = '<div style="font-weight: bold; font-size: 0.85rem;">👤 ' + nom + '</div>' +
@@ -109,7 +108,8 @@ async function chargerParticipants() {
     try {
         participantsAventure = await pb.collection('participants').getFullList({
             filter: `aventures = "${aventureId}"`, 
-            expand: 'utilisateur'
+            expand: 'utilisateur',
+            requestKey: null
         });
 
         if (userId !== createurAventureId) {
@@ -129,7 +129,7 @@ window.changerDroitParticipant = async function(id, nouvellePermission) {
     try {
         await pb.collection('participants').update(id, { permission: nouvellePermission });
     } catch(e) {
-        alert("Erreur lors de la modification des droits. Avez-vous bien débloqué la règle Update dans PocketBase pour la table 'participants' ?");
+        alert("Erreur lors de la modification des droits. Avez-vous bien appliqué l'astuce de l'espace pour la règle Update de la table 'participants' ?");
     }
 };
 
@@ -147,19 +147,19 @@ window.expulserParticipant = async function(id, nom) {
             await chargerParticipants();
             afficherInvites();
         } catch(e) {
-            alert("Erreur lors de l'exclusion définitive. Avez-vous bien débloqué la règle Delete dans PocketBase pour la table 'participants' ?");
+            alert("Erreur lors de l'exclusion définitive. Avez-vous bien appliqué l'astuce de l'espace pour la règle Delete de la table 'participants' ?");
         }
     } else {
         if (!confirm(`Veux-tu retirer le héros de ${nom} et le passer en mode Spectateur (Lecture Seule) ?`)) return;
         try {
             const targetUserId = normaliserIdUtilisateur(part.utilisateur || part.expand?.utilisateur);
             if (targetUserId) {
-                // 1. Supprimer le héros et les decks
                 const joueursAssocies = await pb.collection('joueurs').getFullList({
-                    filter: `aventure = "${aventureId}" && utilisateur = "${targetUserId}"`
+                    filter: `aventure = "${aventureId}" && utilisateur = "${targetUserId}"`,
+                    requestKey: null
                 });
                 for (const j of joueursAssocies) {
-                    const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"` });
+                    const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"`, requestKey: null });
                     for (const d of decks) { await pb.collection('decks').delete(d.id); }
                     await pb.collection('joueurs').delete(j.id);
                     
@@ -168,15 +168,20 @@ window.expulserParticipant = async function(id, nom) {
                     }
                 }
             }
-            // 2. Mettre à jour en spectateur au lieu de le supprimer
-            await pb.collection('participants').update(id, { permission: 'spectateur' });
+            
+            try {
+                await pb.collection('participants').update(id, { permission: 'spectateur' });
+            } catch(eUpdate) {
+                console.warn(eUpdate);
+                alert("Le héros a bien été supprimé, mais le joueur n'a pas pu être passé en spectateur (Erreur 403). Veuillez appliquer l'astuce de l'espace dans PocketBase.");
+            }
             
             await chargerParticipants();
             await chargerJoueurs(pb.authStore.model.id);
             afficherInvites();
         } catch(e) {
-            alert("Erreur lors du passage en spectateur. Avez-vous bien débloqué la règle Update dans PocketBase pour la table 'participants' ?");
             console.error(e);
+            alert("Une erreur inattendue est survenue lors de l'expulsion.");
         }
     }
 };
@@ -200,7 +205,7 @@ async function initialiserPage() {
     try {
         const userId = pb.authStore.model.id;
 
-        const aventure = await pb.collection('aventures').getOne(aventureId);
+        const aventure = await pb.collection('aventures').getOne(aventureId, { requestKey: null });
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
 
         createurAventureId = aventure.createur; 
@@ -208,7 +213,7 @@ async function initialiserPage() {
 
         if (estCreateur) {
             try {
-                const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
+                const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`, { requestKey: null });
                 if (!dejaParticipant) {
                     await pb.collection('participants').create({
                         aventures: aventureId,
@@ -224,10 +229,9 @@ async function initialiserPage() {
                 }).catch(e => console.warn("Création participant créateur ignorée :", e));
             }
         } else {
-            // L'utilisateur n'est pas le créateur : vérifier s'il fait encore partie des participants
             let monParticipant = null;
             try {
-                monParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
+                monParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`, { requestKey: null });
             } catch (e) {
                 monParticipant = null;
             }
@@ -241,7 +245,8 @@ async function initialiserPage() {
         await chargerParticipants(); 
 
         toutesLesCartes = await pb.collection('cartes_butins').getFullList({
-            sort: 'cote'
+            sort: 'cote',
+            requestKey: null
         });
 
         await chargerJoueurs(userId);
@@ -249,8 +254,6 @@ async function initialiserPage() {
         afficherCatalogue(toutesLesCartes);
         
         afficherInvites();
-
-        // Activation de la synchronisation en direct (temps réel)
         abonnerTempsReelDeck();
 
     } catch (err) {
@@ -281,13 +284,15 @@ async function chargerAmisPourInvitation() {
         
         const toutesRelations = await pb.collection('amis').getFullList({
             filter: `(demandeur = "${userId}" || receveur = "${userId}") && statut = "accepte"`,
-            expand: 'demandeur,receveur'
+            expand: 'demandeur,receveur',
+            requestKey: null
         });
 
         const idsDejaPresents = listeJoueurs.map(j => j.utilisateur); 
 
         const invitationsEnAttente = await pb.collection('invitations_aventures').getFullList({
-            filter: `aventure = "${aventureId}"`
+            filter: `aventure = "${aventureId}"`,
+            requestKey: null
         });
         const idsInvites = invitationsEnAttente.map(inv => inv.receveur);
 
@@ -298,7 +303,6 @@ async function chargerAmisPourInvitation() {
             return;
         }
 
-        // TRI : Ordre alphabétique, puis ordre d'arrivée en cas d'égalité
         toutesRelations.sort((a, b) => {
             const amiA = a.demandeur === userId ? a.expand?.receveur : a.expand?.demandeur;
             const amiB = b.demandeur === userId ? b.expand?.receveur : b.expand?.demandeur;
@@ -375,11 +379,12 @@ window.ajouterAmiAventure = async function(amiId, btnElement) {
 
 async function chargerJoueurs(userId) {
     try {
-        listeJoueurs = await pb.collection('joueurs').getFullList({ filter: `aventure = "${aventureId}"`, sort: 'created' });
+        listeJoueurs = await pb.collection('joueurs').getFullList({ filter: `aventure = "${aventureId}"`, sort: 'created', requestKey: null });
         
         invitationsAventure = await pb.collection('invitations_aventures').getFullList({
             filter: `aventure = "${aventureId}"`,
-            expand: 'receveur'
+            expand: 'receveur',
+            requestKey: null
         });
 
         let slotsOccupes = listeJoueurs.map(j => j.emplacement).filter(e => e);
@@ -626,10 +631,10 @@ async function supprimerJoueur(event, joueurId, nom) {
 
     try {
         if (!estSansCompte && joueurUtilisateurId && joueurUtilisateurId !== createurAventureId) {
-            // PASSAGE EN SPECTATEUR PLUTÔT QUE SUPPRESSION
             try {
                 const participantsRecords = await pb.collection('participants').getFullList({
-                    filter: `aventures = "${aventureId}" && utilisateur = "${joueurUtilisateurId}"`
+                    filter: `aventures = "${aventureId}" && utilisateur = "${joueurUtilisateurId}"`,
+                    requestKey: null
                 });
                 for (const p of participantsRecords) {
                     await pb.collection('participants').update(p.id, { permission: 'spectateur' });
@@ -639,7 +644,7 @@ async function supprimerJoueur(event, joueurId, nom) {
             }
         }
 
-        const decks = await pb.collection('decks').getFullList({ filter: 'joueur = "' + joueurId + '"' });
+        const decks = await pb.collection('decks').getFullList({ filter: 'joueur = "' + joueurId + '"', requestKey: null });
         for (const d of decks) { await pb.collection('decks').delete(d.id); }
         await pb.collection('joueurs').delete(joueurId);
 
@@ -652,7 +657,7 @@ async function supprimerJoueur(event, joueurId, nom) {
         await chargerJoueurs(userId);
     } catch (err) {
         console.error("Erreur suppression :", err);
-        alert("Erreur lors de la suppression du héros. Assurez-vous d'avoir les droits nécessaires dans PocketBase.");
+        alert("Erreur lors de la suppression du héros.");
     }
 }
 
@@ -667,7 +672,6 @@ async function selectionnerJoueur(joueurId) {
     }
     joueurActif = listeJoueurs.find(j => j.id === joueurId);
     
-    // CORRECTION DU CRASH DE SÉLECTION
     if (!joueurActif) {
         cartesDuDeck = [];
         deckRecordActif = null;
@@ -686,7 +690,7 @@ async function selectionnerJoueur(joueurId) {
 
     try {
         try {
-            deckRecordActif = await pb.collection('decks').getFirstListItem('joueur = "' + joueurActif.id + '"');
+            deckRecordActif = await pb.collection('decks').getFirstListItem('joueur = "' + joueurActif.id + '"', { requestKey: null });
         } catch (e) {
             const deckDeDepart = DECKS_DE_BASE[joueurActif.emplacement] || DECKS_DE_BASE[1];
             deckRecordActif = await pb.collection('decks').create({
@@ -896,7 +900,7 @@ async function majCompteCartes() {
     
     const filtres = listeJoueurs.map(j => 'joueur = "' + j.id + '"').join(' || ');
     try {
-        const decks = await pb.collection('decks').getFullList({ filter: filtres });
+        const decks = await pb.collection('decks').getFullList({ filter: filtres, requestKey: null });
         decks.forEach(d => {
             if (d.cartes && Array.isArray(d.cartes)) {
                 d.cartes.forEach(cote => {
@@ -959,12 +963,14 @@ async function actualiserJoueursEtSlots() {
     try {
         listeJoueurs = await pb.collection('joueurs').getFullList({
             filter: `aventure = "${aventureId}"`,
-            sort: 'created'
+            sort: 'created',
+            requestKey: null
         });
 
         invitationsAventure = await pb.collection('invitations_aventures').getFullList({
             filter: `aventure = "${aventureId}"`,
-            expand: 'receveur'
+            expand: 'receveur',
+            requestKey: null
         });
 
         await chargerParticipants();
@@ -972,15 +978,12 @@ async function actualiserJoueursEtSlots() {
         const userId = pb.authStore.model?.id;
         if (userId && userId !== createurAventureId) {
             const encoreParticipant = participantsAventure.some(p => normaliserIdUtilisateur(p.utilisateur) === userId);
-
-            // CORRECTION DE LA REDIRECTION FORCÉE : On vérifie juste si on est encore dans les participants.
             if (!encoreParticipant) {
                 redirigerExpulsion();
                 return;
             }
         }
 
-        // Vérifier si le joueur actif est toujours dans l'aventure
         if (joueurActif) {
             const joueurExiste = listeJoueurs.find(j => j.id === joueurActif.id);
             if (joueurExiste) {
@@ -993,7 +996,6 @@ async function actualiserJoueursEtSlots() {
                     joueurActif = joueurExiste;
                 }
             } else {
-                // Le joueur actif a été retiré de l'aventure
                 joueurActif = listeJoueurs.length > 0 ? listeJoueurs[0] : null;
                 if (joueurActif) {
                     await selectionnerJoueur(joueurActif.id);
@@ -1024,7 +1026,6 @@ async function abonnerTempsReelDeck() {
     try {
         const userId = pb.authStore.model?.id;
 
-        // 1. Modifications des DECKS
         await pb.collection('decks').subscribe('*', async (e) => {
             const joueurAssocie = listeJoueurs.find(j => j.id === e.record.joueur);
             if (!joueurAssocie) return;
@@ -1049,14 +1050,14 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 2. Invitations
         await pb.collection('invitations_aventures').subscribe('*', async (e) => {
             if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
 
             try {
                 invitationsAventure = await pb.collection('invitations_aventures').getFullList({
                     filter: `aventure = "${aventureId}"`,
-                    expand: 'receveur'
+                    expand: 'receveur',
+                    requestKey: null
                 });
                 afficherJoueurs();
                 if (modalInvitation && modalInvitation.style.display === 'flex') {
@@ -1067,14 +1068,11 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 3. Héros / Joueurs supprimés 
         await pb.collection('joueurs').subscribe('*', (e) => {
             if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
-            // Ne redirige PLUS ici en cas de perte de héros (on peut rester spectateur)
             debouncedActualiserJoueurs();
         });
 
-        // 4. Participants et droits (permissions modifiées, expulsion TOTALE)
         await pb.collection('participants').subscribe('*', async (e) => {
             const currentUserId = pb.authStore.model?.id;
             const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
@@ -1101,7 +1099,6 @@ async function abonnerTempsReelDeck() {
             rafraichirCatalogueAffichage();
         });
 
-        // 5. Aventure
         await pb.collection('aventures').subscribe('*', (e) => {
             if (!e.record || e.record.id !== aventureId) return;
 
@@ -1116,7 +1113,6 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 6. Amis
         await pb.collection('amis').subscribe('*', (e) => {
             if (modalInvitation && modalInvitation.style.display === 'flex') {
                 if (!e.record || e.record.demandeur === userId || e.record.receveur === userId) {
