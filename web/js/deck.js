@@ -240,6 +240,20 @@ async function chargerAmisPourInvitation() {
             return;
         }
 
+        // TRI : Ordre alphabétique, puis ordre d'arrivée en cas d'égalité
+        toutesRelations.sort((a, b) => {
+            const amiA = a.demandeur === userId ? a.expand?.receveur : a.expand?.demandeur;
+            const amiB = b.demandeur === userId ? b.expand?.receveur : b.expand?.demandeur;
+            
+            const nomA = (amiA?.username || amiA?.name || 'zzzz').toLowerCase();
+            const nomB = (amiB?.username || amiB?.name || 'zzzz').toLowerCase();
+            
+            if (nomA < nomB) return -1;
+            if (nomA > nomB) return 1;
+            
+            return new Date(a.created) - new Date(b.created);
+        });
+
         toutesRelations.forEach(rel => {
             const ami = rel.demandeur === userId ? rel.expand?.receveur : rel.expand?.demandeur;
             if (!ami) return;
