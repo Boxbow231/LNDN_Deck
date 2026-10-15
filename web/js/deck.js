@@ -127,7 +127,7 @@ async function chargerParticipants() {
 
 window.changerDroitParticipant = async function(id, nouvellePermission) {
     try {
-        await pb.collection('participants').update(id, { permission: nouvellePermission });
+        await pb.collection('participants').update(id, { permission: nouvellePermission }, { requestKey: null });
     } catch(e) {
         alert("Erreur lors de la modification des droits. Avez-vous bien appliqué l'astuce de l'espace pour la règle Update de la table 'participants' ?");
     }
@@ -142,12 +142,12 @@ window.expulserParticipant = async function(id, nom) {
     if (estDejaSpectateur) {
         if (!confirm(`Ce joueur est déjà en mode Lecture Seule. Veux-tu l'exclure DÉFINITIVEMENT de l'aventure ?`)) return;
         try {
-            await pb.collection('participants').delete(id);
+            await pb.collection('participants').delete(id, { requestKey: null });
             participantsAventure = participantsAventure.filter(p => p.id !== id);
             await chargerParticipants();
             afficherInvites();
         } catch(e) {
-            alert("Erreur lors de l'exclusion définitive. Avez-vous bien appliqué l'astuce de l'espace pour la règle Delete de la table 'participants' ?");
+            alert("Erreur d'exclusion. Débloquez la règle Delete de la table 'participants'.");
         }
     } else {
         if (!confirm(`Veux-tu retirer le héros de ${nom} et le passer en mode Spectateur (Lecture Seule) ?`)) return;
@@ -160,8 +160,8 @@ window.expulserParticipant = async function(id, nom) {
                 });
                 for (const j of joueursAssocies) {
                     const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"`, requestKey: null });
-                    for (const d of decks) { await pb.collection('decks').delete(d.id); }
-                    await pb.collection('joueurs').delete(j.id);
+                    for (const d of decks) { await pb.collection('decks').delete(d.id, { requestKey: null }); }
+                    await pb.collection('joueurs').delete(j.id, { requestKey: null });
                     
                     if (joueurActif && joueurActif.id === j.id) {
                         joueurActif = null;
@@ -170,10 +170,9 @@ window.expulserParticipant = async function(id, nom) {
             }
             
             try {
-                await pb.collection('participants').update(id, { permission: 'spectateur' });
+                await pb.collection('participants').update(id, { permission: 'spectateur' }, { requestKey: null });
             } catch(eUpdate) {
                 console.warn(eUpdate);
-                alert("Le héros a bien été supprimé, mais le joueur n'a pas pu être passé en spectateur (Erreur 403). Veuillez appliquer l'astuce de l'espace dans PocketBase.");
             }
             
             await chargerParticipants();
@@ -181,7 +180,7 @@ window.expulserParticipant = async function(id, nom) {
             afficherInvites();
         } catch(e) {
             console.error(e);
-            alert("Une erreur inattendue est survenue lors de l'expulsion.");
+            alert("Erreur (403 Forbidden). Avez-vous bien débloqué l'Update et le Delete pour les tables 'joueurs' et 'decks' ?");
         }
     }
 };
@@ -394,7 +393,7 @@ async function chargerJoueurs(userId) {
                     if (!slotsOccupes.includes(i)) {
                         j.emplacement = i;
                         slotsOccupes.push(i);
-                        await pb.collection('joueurs').update(j.id, { emplacement: i }).catch(e => console.warn(e));
+                        await pb.collection('joueurs').update(j.id, { emplacement: i }, { requestKey: null }).catch(e => console.warn(e));
                         break;
                     }
                 }
@@ -588,7 +587,7 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     if (!nouveauNom || nouveauNom.trim() === "" || nouveauNom.trim() === ancienNom) return;
 
     try {
-        await pb.collection('joueurs').update(joueurId, { nom_provisoire: nouveauNom.trim() });
+        await pb.collection('joueurs').update(joueurId, { nom_provisoire: nouveauNom.trim() }, { requestKey: null });
         const j = listeJoueurs.find(j => j.id === joueurId);
         if (j) j.nom_provisoire = nouveauNom.trim();
 
@@ -637,16 +636,16 @@ async function supprimerJoueur(event, joueurId, nom) {
                     requestKey: null
                 });
                 for (const p of participantsRecords) {
-                    await pb.collection('participants').update(p.id, { permission: 'spectateur' });
+                    await pb.collection('participants').update(p.id, { permission: 'spectateur' }, { requestKey: null });
                 }
             } catch (errPart) {
                 console.warn("Erreur mise à jour participant associé :", errPart);
             }
         }
 
-        const decks = await pb.collection('decks').getFullList({ filter: 'joueur = "' + joueurId + '"', requestKey: null });
-        for (const d of decks) { await pb.collection('decks').delete(d.id); }
-        await pb.collection('joueurs').delete(joueurId);
+        const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurId}"`, requestKey: null });
+        for (const d of decks) { await pb.collection('decks').delete(d.id, { requestKey: null }); }
+        await pb.collection('joueurs').delete(joueurId, { requestKey: null });
 
         if (joueurActif && joueurActif.id === joueurId) {
             joueurActif = null;
@@ -657,7 +656,7 @@ async function supprimerJoueur(event, joueurId, nom) {
         await chargerJoueurs(userId);
     } catch (err) {
         console.error("Erreur suppression :", err);
-        alert("Erreur lors de la suppression du héros.");
+        alert("Erreur (403). Avez-vous débloqué l'Update et le Delete pour 'joueurs' et 'decks' dans PocketBase ?");
     }
 }
 
@@ -690,7 +689,7 @@ async function selectionnerJoueur(joueurId) {
 
     try {
         try {
-            deckRecordActif = await pb.collection('decks').getFirstListItem('joueur = "' + joueurActif.id + '"', { requestKey: null });
+            deckRecordActif = await pb.collection('decks').getFirstListItem(`joueur = "${joueurActif.id}"`, { requestKey: null });
         } catch (e) {
             const deckDeDepart = DECKS_DE_BASE[joueurActif.emplacement] || DECKS_DE_BASE[1];
             deckRecordActif = await pb.collection('decks').create({
@@ -878,12 +877,14 @@ async function executerSauvegardeDeck() {
     try {
         sauvegardeEnCours = true;
         const listeCotes = cartesDuDeck.map(c => c.cote);
-        const updated = await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes });
+        const updated = await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes }, { requestKey: null });
         deckRecordActif = updated;
     } catch (err) {
         console.error("Erreur de sauvegarde :", err);
     } finally {
         sauvegardeEnCours = false;
+        // CORRECTION DU BUG DE SYNCHRONISATION
+        timerSauvegardeDeck = null; 
     }
 }
 
@@ -978,6 +979,7 @@ async function actualiserJoueursEtSlots() {
         const userId = pb.authStore.model?.id;
         if (userId && userId !== createurAventureId) {
             const encoreParticipant = participantsAventure.some(p => normaliserIdUtilisateur(p.utilisateur) === userId);
+
             if (!encoreParticipant) {
                 redirigerExpulsion();
                 return;
