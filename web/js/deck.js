@@ -18,6 +18,13 @@ let mesDroits = "spectateur";
 let createurAventureId = null;
 let monParticipantId = null;
 
+function normaliserIdUtilisateur(val) {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val.id) return val.id;
+    return String(val);
+}
+
 function redirigerExpulsion() {
     sessionStorage.setItem('message_expulsion', "Vous avez été expulsé de cette aventure.");
     window.location.href = "accueil.html";
@@ -106,7 +113,7 @@ async function chargerParticipants() {
         });
 
         if (userId !== createurAventureId) {
-            const monAcces = participantsAventure.find(p => p.utilisateur === userId || p.utilisateur?.id === userId);
+            const monAcces = participantsAventure.find(p => normaliserIdUtilisateur(p.utilisateur) === userId);
             monParticipantId = monAcces ? monAcces.id : null;
             mesDroits = monAcces ? monAcces.permission : "spectateur";
         }
@@ -130,17 +137,41 @@ window.expulserParticipant = async function(id, nom) {
     if (!confirm(`Veux-tu vraiment expulser ${nom} de l'aventure ? Son héros et son deck seront définitivement supprimés.`)) return;
     try {
         const part = participantsAventure.find(p => p.id === id);
-        if (part) {
-            const joueurAssocie = listeJoueurs.find(j => j.utilisateur === part.utilisateur);
-            if (joueurAssocie) {
-                const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueurAssocie.id}"` });
-                for (const d of decks) { await pb.collection('decks').delete(d.id); }
-                await pb.collection('joueurs').delete(joueurAssocie.id);
+        const targetUserId = part ? normaliserIdUtilisateur(part.utilisateur || part.expand?.utilisateur) : null;
+
+        if (targetUserId) {
+            // 1. Supprimer tous les héros et decks de ce participant dans cette aventure
+            try {
+                const joueursAssocies = await pb.collection('joueurs').getFullList({
+                    filter: `aventure = "${aventureId}" && utilisateur = "${targetUserId}"`
+                });
+                for (const j of joueursAssocies) {
+                    const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"` });
+                    for (const d of decks) { await pb.collection('decks').delete(d.id); }
+                    await pb.collection('joueurs').delete(j.id);
+                }
+            } catch (errJoueurs) {
+                console.warn("Erreur suppression joueurs lors de l'expulsion :", errJoueurs);
             }
+
+            // 2. Supprimer toutes les entrées de ce participant pour cette aventure
+            try {
+                const participantsRecords = await pb.collection('participants').getFullList({
+                    filter: `aventures = "${aventureId}" && utilisateur = "${targetUserId}"`
+                });
+                for (const p of participantsRecords) {
+                    await pb.collection('participants').delete(p.id);
+                }
+            } catch (errParts) {
+                console.warn("Erreur suppression participants lors de l'expulsion :", errParts);
+            }
+        } else {
+            await pb.collection('participants').delete(id);
         }
-        await pb.collection('participants').delete(id);
+
         participantsAventure = participantsAventure.filter(p => p.id !== id);
         
+        await chargerParticipants();
         await chargerJoueurs(pb.authStore.model.id);
         afficherInvites();
     } catch(e) {
@@ -207,8 +238,8 @@ async function initialiserPage() {
                 monJoueur = null;
             }
 
-            // S'il n'est ni participant ni joueur, il a été expulsé ou n'a pas accès
-            if (!monParticipant && !monJoueur) {
+            // S'il n'est plus participant ou plus joueur, il a été expulsé ou n'a plus accès
+            if (!monParticipant || !monJoueur) {
                 redirigerExpulsion();
                 return;
             }
@@ -403,9 +434,10 @@ function afficherJoueurs() {
             const btnColor = estActif ? '#f4ecd8' : 'var(--encre-noire)';
             const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour voir';
 
-            const estCreateurMainSlot = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) === 1);
-            const estSansCompte = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) !== 1);
-            const estMonSlot = (joueurSlot.utilisateur === pb.authStore.model.id);
+            const joueurUtilisateurId = normaliserIdUtilisateur(joueurSlot.utilisateur);
+            const estCreateurMainSlot = (joueurUtilisateurId === createurAventureId && parseInt(joueurSlot.emplacement) === 1);
+            const estSansCompte = (joueurUtilisateurId === createurAventureId && parseInt(joueurSlot.emplacement) !== 1);
+            const estMonSlot = (joueurUtilisateurId === pb.authStore.model.id);
 
             let afficherBoutonRenommer = false;
             let afficherBoutonRetirer = false;
@@ -551,7 +583,7 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 
     const joueurARenommer = listeJoueurs.find(j => j.id === joueurId);
-    if (joueurARenommer && mesDroits === 'deck' && joueurARenommer.utilisateur !== pb.authStore.model.id) {
+    if (joueurARenommer && mesDroits === 'deck' && normaliserIdUtilisateur(joueurARenommer.utilisateur) !== pb.authStore.model.id) {
         alert("Vous ne pouvez renommer que votre propre héros.");
         return;
     }
@@ -581,8 +613,9 @@ async function supprimerJoueur(event, joueurId, nom) {
     const joueurASupprimer = listeJoueurs.find(j => j.id === joueurId);
     if (!joueurASupprimer) return;
 
-    const estCreateurMainSlot = (joueurASupprimer.utilisateur === createurAventureId && parseInt(joueurASupprimer.emplacement) === 1);
-    const estSansCompte = (joueurASupprimer.utilisateur === createurAventureId && parseInt(joueurASupprimer.emplacement) !== 1);
+    const joueurUtilisateurId = normaliserIdUtilisateur(joueurASupprimer.utilisateur);
+    const estCreateurMainSlot = (joueurUtilisateurId === createurAventureId && parseInt(joueurASupprimer.emplacement) === 1);
+    const estSansCompte = (joueurUtilisateurId === createurAventureId && parseInt(joueurASupprimer.emplacement) !== 1);
 
     if (mesDroits === 'spectateur' || mesDroits === 'deck') {
         alert("Vous n'avez pas les droits pour supprimer un héros.");
@@ -601,10 +634,17 @@ async function supprimerJoueur(event, joueurId, nom) {
     if (!conf) return;
 
     try {
-        if (!estSansCompte) {
-            const part = participantsAventure.find(p => p.utilisateur === joueurASupprimer.utilisateur);
-            if (part) {
-                await pb.collection('participants').delete(part.id);
+        if (!estSansCompte && joueurUtilisateurId && joueurUtilisateurId !== createurAventureId) {
+            // Supprimer le participant associé de la table participants dans PocketBase
+            try {
+                const participantsRecords = await pb.collection('participants').getFullList({
+                    filter: `aventures = "${aventureId}" && utilisateur = "${joueurUtilisateurId}"`
+                });
+                for (const p of participantsRecords) {
+                    await pb.collection('participants').delete(p.id);
+                }
+            } catch (errPart) {
+                console.warn("Erreur suppression participant associé :", errPart);
             }
         }
 
@@ -762,6 +802,14 @@ function rafraichirCatalogueAffichage() {
 }
 
 async function ajouterAuDeck(cote) {
+    const currentUserId = pb.authStore.model?.id;
+    if (currentUserId && currentUserId !== createurAventureId) {
+        const monAcces = participantsAventure.find(p => normaliserIdUtilisateur(p.utilisateur) === currentUserId);
+        if (!monAcces) {
+            redirigerExpulsion();
+            return;
+        }
+    }
     if (mesDroits === 'spectateur') {
         alert("Mode lecture seule : vous n'avez pas l'autorisation de modifier ce deck.");
         return;
@@ -790,6 +838,14 @@ async function ajouterAuDeck(cote) {
 }
 
 async function retirerDuDeck(index) {
+    const currentUserId = pb.authStore.model?.id;
+    if (currentUserId && currentUserId !== createurAventureId) {
+        const monAcces = participantsAventure.find(p => normaliserIdUtilisateur(p.utilisateur) === currentUserId);
+        if (!monAcces) {
+            redirigerExpulsion();
+            return;
+        }
+    }
     if (mesDroits === 'spectateur') {
         alert("Mode lecture seule : vous n'avez pas l'autorisation de modifier ce deck.");
         return;
@@ -907,16 +963,15 @@ async function actualiserJoueursEtSlots() {
             expand: 'receveur'
         });
 
+        await chargerParticipants();
+
         // Si l'utilisateur actuel n'est pas le créateur, vérifier s'il est toujours membre de l'aventure
         const userId = pb.authStore.model?.id;
         if (userId && userId !== createurAventureId) {
-            const encoreJoueur = listeJoueurs.some(j => j.utilisateur === userId);
-            const encoreParticipant = participantsAventure.some(p => {
-                const pId = (typeof p.utilisateur === 'object' && p.utilisateur !== null) ? p.utilisateur.id : p.utilisateur;
-                return pId === userId;
-            });
+            const encoreJoueur = listeJoueurs.some(j => normaliserIdUtilisateur(j.utilisateur) === userId);
+            const encoreParticipant = participantsAventure.some(p => normaliserIdUtilisateur(p.utilisateur) === userId);
 
-            if (!encoreJoueur && !encoreParticipant) {
+            if (!encoreJoueur || !encoreParticipant) {
                 redirigerExpulsion();
                 return;
             }
@@ -1015,30 +1070,34 @@ async function abonnerTempsReelDeck() {
 
         // 3. Héros / Joueurs (nouveaux arrivés, renommés, supprimés)
         await pb.collection('joueurs').subscribe('*', (e) => {
+            const currentUserId = pb.authStore.model?.id;
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
+
+            if (e.action === 'delete' && currentUserId && currentUserId !== createurAventureId && recUserId === currentUserId) {
+                redirigerExpulsion();
+                return;
+            }
+
             if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
             debouncedActualiserJoueurs();
         });
 
         // 4. Participants et droits (permissions modifiées, expulsion)
         await pb.collection('participants').subscribe('*', async (e) => {
-            if (e.record && e.record.aventures && e.record.aventures !== aventureId) return;
+            const currentUserId = pb.authStore.model?.id;
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
 
-            const recUserId = (typeof e.record?.utilisateur === 'object' && e.record.utilisateur !== null)
-                ? e.record.utilisateur.id
-                : e.record?.utilisateur;
-
-            if (e.action === 'delete' && (recUserId === userId || e.record?.id === monParticipantId)) {
+            if (e.action === 'delete' && (recUserId === currentUserId || e.record?.id === monParticipantId)) {
                 redirigerExpulsion();
                 return;
             }
 
+            if (e.record && e.record.aventures && e.record.aventures !== aventureId) return;
+
             await chargerParticipants();
 
-            if (userId && userId !== createurAventureId) {
-                const estToujoursParticipant = participantsAventure.some(p => {
-                    const pId = (typeof p.utilisateur === 'object' && p.utilisateur !== null) ? p.utilisateur.id : p.utilisateur;
-                    return pId === userId;
-                });
+            if (currentUserId && currentUserId !== createurAventureId) {
+                const estToujoursParticipant = participantsAventure.some(p => normaliserIdUtilisateur(p.utilisateur) === currentUserId);
                 if (!estToujoursParticipant) {
                     redirigerExpulsion();
                     return;

@@ -3,6 +3,13 @@ const createForm = document.getElementById('create-aventure-form');
 const zoneInvitations = document.getElementById('zone-invitations-aventure');
 const listeInvitations = document.getElementById('invitations-aventure-liste');
 
+function normaliserIdUtilisateur(val) {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val.id) return val.id;
+    return String(val);
+}
+
 // 1. On intègre les vrais decks de base selon l'emplacement
 const DECKS_DE_BASE = {
     1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"],
@@ -484,14 +491,16 @@ async function abonnerTempsReelAccueil() {
 
         // Joueurs ajoutés / retirés des aventures
         await pb.collection('joueurs').subscribe('*', (e) => {
-            if (!e.record || e.record.utilisateur === userId) {
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
+            if (!e.record || recUserId === userId) {
                 debouncedChargerAventures();
             }
         });
 
         // Participants ajoutés / retirés
         await pb.collection('participants').subscribe('*', (e) => {
-            if (!e.record || e.record.utilisateur === userId) {
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
+            if (!e.record || recUserId === userId) {
                 debouncedChargerAventures();
             }
         });
