@@ -129,7 +129,7 @@ window.changerDroitParticipant = async function(id, nouvellePermission) {
     try {
         await pb.collection('participants').update(id, { permission: nouvellePermission });
     } catch(e) {
-        alert("Erreur lors de la modification des droits.");
+        alert("Erreur lors de la modification des droits. Avez-vous bien débloqué la règle Update dans PocketBase pour la table 'participants' ?");
     }
 };
 
@@ -140,14 +140,14 @@ window.expulserParticipant = async function(id, nom) {
     const estDejaSpectateur = (part.permission === 'spectateur');
 
     if (estDejaSpectateur) {
-        if (!confirm(`Ce joueur est déjà Spectateur. Veux-tu l'exclure DÉFINITIVEMENT de l'aventure ?`)) return;
+        if (!confirm(`Ce joueur est déjà en mode Lecture Seule. Veux-tu l'exclure DÉFINITIVEMENT de l'aventure ?`)) return;
         try {
             await pb.collection('participants').delete(id);
             participantsAventure = participantsAventure.filter(p => p.id !== id);
             await chargerParticipants();
             afficherInvites();
         } catch(e) {
-            alert("Erreur lors de l'exclusion définitive.");
+            alert("Erreur lors de l'exclusion définitive. Avez-vous bien débloqué la règle Delete dans PocketBase pour la table 'participants' ?");
         }
     } else {
         if (!confirm(`Veux-tu retirer le héros de ${nom} et le passer en mode Spectateur (Lecture Seule) ?`)) return;
@@ -163,7 +163,6 @@ window.expulserParticipant = async function(id, nom) {
                     for (const d of decks) { await pb.collection('decks').delete(d.id); }
                     await pb.collection('joueurs').delete(j.id);
                     
-                    // CORRECTION DU CRASH : On désélectionne le joueur s'il était actif
                     if (joueurActif && joueurActif.id === j.id) {
                         joueurActif = null;
                     }
@@ -176,7 +175,7 @@ window.expulserParticipant = async function(id, nom) {
             await chargerJoueurs(pb.authStore.model.id);
             afficherInvites();
         } catch(e) {
-            alert("Erreur lors du passage en spectateur.");
+            alert("Erreur lors du passage en spectateur. Avez-vous bien débloqué la règle Update dans PocketBase pour la table 'participants' ?");
             console.error(e);
         }
     }
@@ -233,7 +232,6 @@ async function initialiserPage() {
                 monParticipant = null;
             }
 
-            // CORRECTION DE LA REDIRECTION : on vérifie uniquement s'il est participant (il a le droit de ne pas avoir de héros s'il est spectateur)
             if (!monParticipant) {
                 redirigerExpulsion();
                 return;
