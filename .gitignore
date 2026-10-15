@@ -5,4 +5,10 @@ pocketbase_*/pb_data/
 *.db-journal
 *.db-wal
 *.db-shm
+
+pocketbase_0.40.4_windows_amd64/CHANGELOG.md
+pocketbase_0.40.4_windows_amd64/LICENSE.md
+pocketbase_0.40.4_windows_amd64/pocketbase*
+
+
 utiliser.txt*
