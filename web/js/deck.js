@@ -195,6 +195,9 @@ async function initialiserPage() {
         
         afficherInvites();
 
+        // Activation de la synchronisation en direct (temps réel)
+        abonnerTempsReelDeck();
+
     } catch (err) {
         console.error("Erreur d'initialisation :", err);
         alert(`Erreur de chargement : ${err.message || err.status}`);
@@ -596,6 +599,10 @@ async function supprimerJoueur(event, joueurId, nom) {
 // ==========================================
 
 async function selectionnerJoueur(joueurId) {
+    if (timerSauvegardeDeck) {
+        clearTimeout(timerSauvegardeDeck);
+        await executerSauvegardeDeck();
+    }
     joueurActif = listeJoueurs.find(j => j.id === joueurId);
     afficherJoueurs();
 
@@ -748,7 +755,7 @@ async function ajouterAuDeck(cote) {
     compteCartesUtilisees[cote] = utilisees + 1;
     afficherDeck();
     rafraichirCatalogueAffichage();
-    await sauvegarderDeck();
+    sauvegarderDeck();
 }
 
 async function retirerDuDeck(index) {
@@ -767,16 +774,31 @@ async function retirerDuDeck(index) {
 
     afficherDeck();
     rafraichirCatalogueAffichage();
-    await sauvegarderDeck();
+    sauvegarderDeck();
 }
 
-async function sauvegarderDeck() {
+let timerSauvegardeDeck = null;
+let sauvegardeEnCours = false;
+
+async function executerSauvegardeDeck() {
+    if (!deckRecordActif) return;
     try {
+        sauvegardeEnCours = true;
         const listeCotes = cartesDuDeck.map(c => c.cote);
-        await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes });
+        const updated = await pb.collection('decks').update(deckRecordActif.id, { cartes: listeCotes });
+        deckRecordActif = updated;
     } catch (err) {
         console.error("Erreur de sauvegarde :", err);
+    } finally {
+        sauvegardeEnCours = false;
     }
+}
+
+function sauvegarderDeck() {
+    clearTimeout(timerSauvegardeDeck);
+    timerSauvegardeDeck = setTimeout(async () => {
+        await executerSauvegardeDeck();
+    }, 250);
 }
 
 async function majCompteCartes() {
@@ -822,6 +844,195 @@ if (searchDeckInput) {
     searchDeckInput.addEventListener('input', () => {
         afficherDeck();
     });
+// ==========================================
+// GESTION DU TEMPS RÉEL (SYNCHRONISATION EN DIRECT SANS RECHARGER)
+// ==========================================
+let timerMajCatalogue = null;
+function debouncedMajCartesCatalogue() {
+    clearTimeout(timerMajCatalogue);
+    timerMajCatalogue = setTimeout(async () => {
+        await majCompteCartes();
+        rafraichirCatalogueAffichage();
+    }, 150);
 }
+
+let timerActualiserJoueurs = null;
+function debouncedActualiserJoueurs() {
+    clearTimeout(timerActualiserJoueurs);
+    timerActualiserJoueurs = setTimeout(async () => {
+        await actualiserJoueursEtSlots();
+    }, 150);
+}
+
+async function actualiserJoueursEtSlots() {
+    try {
+        listeJoueurs = await pb.collection('joueurs').getFullList({
+            filter: `aventure = "${aventureId}"`,
+            sort: 'created'
+        });
+
+        invitationsAventure = await pb.collection('invitations_aventures').getFullList({
+            filter: `aventure = "${aventureId}"`,
+            expand: 'receveur'
+        });
+
+        // Vérifier si le joueur actif est toujours dans l'aventure
+        if (joueurActif) {
+            const joueurExiste = listeJoueurs.find(j => j.id === joueurActif.id);
+            if (joueurExiste) {
+                if (joueurExiste.nom_provisoire !== joueurActif.nom_provisoire) {
+                    joueurActif = joueurExiste;
+                    if (deckTitreJoueurEl) {
+                        deckTitreJoueurEl.textContent = 'Deck : ' + (joueurActif.nom_provisoire || 'Héros');
+                    }
+                } else {
+                    joueurActif = joueurExiste;
+                }
+            } else {
+                // Le joueur actif a été retiré de l'aventure
+                joueurActif = listeJoueurs.length > 0 ? listeJoueurs[0] : null;
+                if (joueurActif) {
+                    await selectionnerJoueur(joueurActif.id);
+                } else {
+                    cartesDuDeck = [];
+                    deckRecordActif = null;
+                    afficherDeck();
+                    if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Aucun héros';
+                }
+            }
+        } else if (listeJoueurs.length > 0) {
+            joueurActif = listeJoueurs[0];
+            await selectionnerJoueur(joueurActif.id);
+        }
+
+        afficherJoueurs();
+        debouncedMajCartesCatalogue();
+
+        if (modalInvitation && modalInvitation.style.display === 'flex') {
+            await chargerAmisPourInvitation();
+        }
+    } catch (err) {
+        console.error("Erreur actualisation joueurs et slots :", err);
+    }
+}
+
+async function abonnerTempsReelDeck() {
+    try {
+        const userId = pb.authStore.model?.id;
+
+        // 1. Modifications des DECKS (cartes ajoutées/retirées)
+        await pb.collection('decks').subscribe('*', async (e) => {
+            // Est-ce un deck de notre aventure ?
+            const joueurAssocie = listeJoueurs.find(j => j.id === e.record.joueur);
+            if (!joueurAssocie) return;
+
+            // Mettre à jour les quotas du catalogue pour tout le monde
+            debouncedMajCartesCatalogue();
+
+            // Si c'est le deck actuellement affiché à l'écran
+            if (joueurActif && e.record.joueur === joueurActif.id) {
+                const serverCotes = Array.isArray(e.record.cartes) ? e.record.cartes : [];
+                const localCotes = cartesDuDeck.map(c => c.cote);
+                const estIdentique = serverCotes.length === localCotes.length &&
+                    serverCotes.every((val, idx) => val === localCotes[idx]);
+
+                // Si modifié par un autre joueur ou un autre onglet
+                if (!estIdentique && !timerSauvegardeDeck && !sauvegardeEnCours) {
+                    deckRecordActif = e.record;
+                    cartesDuDeck = serverCotes
+                        .map(cote => toutesLesCartes.find(c => c.cote === cote))
+                        .filter(Boolean);
+                    afficherDeck();
+                } else if (estIdentique) {
+                    deckRecordActif = e.record;
+                }
+            }
+        });
+
+        // 2. Invitations d'aventure (envoyées, acceptées, annulées)
+        await pb.collection('invitations_aventures').subscribe('*', async (e) => {
+            if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
+
+            try {
+                invitationsAventure = await pb.collection('invitations_aventures').getFullList({
+                    filter: `aventure = "${aventureId}"`,
+                    expand: 'receveur'
+                });
+                afficherJoueurs();
+                if (modalInvitation && modalInvitation.style.display === 'flex') {
+                    await chargerAmisPourInvitation();
+                }
+            } catch (err) {
+                console.error("Erreur rafraîchissement invitations :", err);
+            }
+        });
+
+        // 3. Héros / Joueurs (nouveaux arrivés, renommés, supprimés)
+        await pb.collection('joueurs').subscribe('*', (e) => {
+            if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
+            debouncedActualiserJoueurs();
+        });
+
+        // 4. Participants et droits (permissions modifiées, expulsion)
+        await pb.collection('participants').subscribe('*', async (e) => {
+            if (e.record && e.record.aventures && e.record.aventures !== aventureId) return;
+
+            if (e.action === 'delete' && e.record && e.record.utilisateur === userId) {
+                alert("Vous avez été retiré de cette aventure.");
+                window.location.href = "accueil.html";
+                return;
+            }
+
+            await chargerParticipants();
+            afficherJoueurs();
+            afficherDeck();
+            rafraichirCatalogueAffichage();
+        });
+
+        // 5. Aventure (titre modifié, aventure supprimée)
+        await pb.collection('aventures').subscribe('*', (e) => {
+            if (!e.record || e.record.id !== aventureId) return;
+
+            if (e.action === 'delete') {
+                alert("Cette aventure a été supprimée par son créateur.");
+                window.location.href = "accueil.html";
+                return;
+            }
+
+            if (e.action === 'update' && e.record.titre) {
+                if (titreAventureEl) titreAventureEl.textContent = e.record.titre;
+            }
+        });
+
+        // 6. Amis (si modal invitation ouverte)
+        await pb.collection('amis').subscribe('*', (e) => {
+            if (modalInvitation && modalInvitation.style.display === 'flex') {
+                if (!e.record || e.record.demandeur === userId || e.record.receveur === userId) {
+                    chargerAmisPourInvitation();
+                }
+            }
+        });
+
+    } catch (err) {
+        console.error("Erreur initialisation temps réel (deck) :", err);
+    }
+}
+
+function desabonnerTempsReelDeck() {
+    pb.collection('decks').unsubscribe('*').catch(() => {});
+    pb.collection('invitations_aventures').unsubscribe('*').catch(() => {});
+    pb.collection('joueurs').unsubscribe('*').catch(() => {});
+    pb.collection('participants').unsubscribe('*').catch(() => {});
+    pb.collection('aventures').unsubscribe('*').catch(() => {});
+    pb.collection('amis').unsubscribe('*').catch(() => {});
+}
+
+window.addEventListener('beforeunload', () => {
+    if (timerSauvegardeDeck) {
+        clearTimeout(timerSauvegardeDeck);
+        executerSauvegardeDeck();
+    }
+    desabonnerTempsReelDeck();
+});
 
 initialiserPage();

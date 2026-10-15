@@ -447,6 +447,71 @@ if (formMonCompte) {
     });
 }
 
+// ==========================================
+// 6. GESTION DU TEMPS RÉEL (SANS RECHARGER LA PAGE)
+// ==========================================
+let timerAventures = null;
+function debouncedChargerAventures() {
+    clearTimeout(timerAventures);
+    timerAventures = setTimeout(async () => {
+        await chargerAventures();
+    }, 150);
+}
+
+let timerInvitations = null;
+function debouncedChargerInvitations() {
+    clearTimeout(timerInvitations);
+    timerInvitations = setTimeout(async () => {
+        await chargerInvitationsAventures();
+    }, 150);
+}
+
+async function abonnerTempsReelAccueil() {
+    try {
+        const userId = pb.authStore.model?.id;
+
+        // Invitations d'aventure reçues ou annulées
+        await pb.collection('invitations_aventures').subscribe('*', (e) => {
+            if (!e.record || e.record.receveur === userId || e.record.demandeur === userId) {
+                debouncedChargerInvitations();
+            }
+        });
+
+        // Aventures créées, renommées ou supprimées
+        await pb.collection('aventures').subscribe('*', () => {
+            debouncedChargerAventures();
+        });
+
+        // Joueurs ajoutés / retirés des aventures
+        await pb.collection('joueurs').subscribe('*', (e) => {
+            if (!e.record || e.record.utilisateur === userId) {
+                debouncedChargerAventures();
+            }
+        });
+
+        // Participants ajoutés / retirés
+        await pb.collection('participants').subscribe('*', (e) => {
+            if (!e.record || e.record.utilisateur === userId) {
+                debouncedChargerAventures();
+            }
+        });
+    } catch (err) {
+        console.error("Erreur d'abonnement temps réel (accueil) :", err);
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    pb.collection('invitations_aventures').unsubscribe('*').catch(() => {});
+    pb.collection('aventures').unsubscribe('*').catch(() => {});
+    pb.collection('joueurs').unsubscribe('*').catch(() => {});
+    pb.collection('participants').unsubscribe('*').catch(() => {});
+});
+
 // Initialisation au chargement de la page
-chargerInvitationsAventures();
-chargerAventures();
+async function initialiserAccueil() {
+    await chargerInvitationsAventures();
+    await chargerAventures();
+    abonnerTempsReelAccueil();
+}
+
+initialiserAccueil();

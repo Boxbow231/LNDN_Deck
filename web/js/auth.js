@@ -1,4 +1,6 @@
-const pbUrl = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port !== '' ? 'http://127.0.0.1:8090' : '/'; const pb = new PocketBase(pbUrl);
+const isLocal = !window.location.hostname || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const pbUrl = isLocal ? 'http://127.0.0.1:8090' : '/';
+const pb = new PocketBase(pbUrl);
 
 // 1. Initialisation (savoir sur quelle page on est)
 const currentPage = window.location.pathname;
