@@ -509,6 +509,13 @@ window.addEventListener('beforeunload', () => {
 
 // Initialisation au chargement de la page
 async function initialiserAccueil() {
+    // Vérifier si l'utilisateur a été expulsé d'une aventure
+    const msgExpulsion = sessionStorage.getItem('message_expulsion');
+    if (msgExpulsion) {
+        sessionStorage.removeItem('message_expulsion');
+        setTimeout(() => alert(msgExpulsion), 50);
+    }
+
     await chargerInvitationsAventures();
     await chargerAventures();
     abonnerTempsReelAccueil();

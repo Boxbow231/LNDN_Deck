@@ -16,6 +16,12 @@ let invitationsAventure = [];
 let participantsAventure = [];
 let mesDroits = "spectateur";
 let createurAventureId = null;
+let monParticipantId = null;
+
+function redirigerExpulsion() {
+    sessionStorage.setItem('message_expulsion', "Vous avez été expulsé de cette aventure.");
+    window.location.href = "accueil.html";
+}
 
 const DECKS_DE_BASE = {
     1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"],
@@ -101,6 +107,7 @@ async function chargerParticipants() {
 
         if (userId !== createurAventureId) {
             const monAcces = participantsAventure.find(p => p.utilisateur === userId || p.utilisateur?.id === userId);
+            monParticipantId = monAcces ? monAcces.id : null;
             mesDroits = monAcces ? monAcces.permission : "spectateur";
         }
 
@@ -165,22 +172,46 @@ async function initialiserPage() {
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
 
         createurAventureId = aventure.createur; 
+        const estCreateur = (userId === createurAventureId);
 
-        try {
-            const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
-            if (!dejaParticipant) {
+        if (estCreateur) {
+            try {
+                const dejaParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
+                if (!dejaParticipant) {
+                    await pb.collection('participants').create({
+                        aventures: aventureId,
+                        utilisateur: userId,
+                        permission: 'admin'
+                    });
+                }
+            } catch (err) {
                 await pb.collection('participants').create({
                     aventures: aventureId,
                     utilisateur: userId,
                     permission: 'admin'
-                });
+                }).catch(e => console.warn("Création participant créateur ignorée :", e));
             }
-        } catch (err) {
-            await pb.collection('participants').create({
-                aventures: aventureId,
-                utilisateur: userId,
-                permission: 'admin'
-            }).catch(e => console.warn("Création participant créateur ignorée :", e));
+        } else {
+            // L'utilisateur n'est pas le créateur : vérifier s'il fait encore partie de l'aventure
+            let monParticipant = null;
+            try {
+                monParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
+            } catch (e) {
+                monParticipant = null;
+            }
+
+            let monJoueur = null;
+            try {
+                monJoueur = await pb.collection('joueurs').getFirstListItem(`aventure = "${aventureId}" && utilisateur = "${userId}"`);
+            } catch (e) {
+                monJoueur = null;
+            }
+
+            // S'il n'est ni participant ni joueur, il a été expulsé ou n'a pas accès
+            if (!monParticipant && !monJoueur) {
+                redirigerExpulsion();
+                return;
+            }
         }
 
         await chargerParticipants(); 
@@ -876,6 +907,21 @@ async function actualiserJoueursEtSlots() {
             expand: 'receveur'
         });
 
+        // Si l'utilisateur actuel n'est pas le créateur, vérifier s'il est toujours membre de l'aventure
+        const userId = pb.authStore.model?.id;
+        if (userId && userId !== createurAventureId) {
+            const encoreJoueur = listeJoueurs.some(j => j.utilisateur === userId);
+            const encoreParticipant = participantsAventure.some(p => {
+                const pId = (typeof p.utilisateur === 'object' && p.utilisateur !== null) ? p.utilisateur.id : p.utilisateur;
+                return pId === userId;
+            });
+
+            if (!encoreJoueur && !encoreParticipant) {
+                redirigerExpulsion();
+                return;
+            }
+        }
+
         // Vérifier si le joueur actif est toujours dans l'aventure
         if (joueurActif) {
             const joueurExiste = listeJoueurs.find(j => j.id === joueurActif.id);
@@ -977,13 +1023,28 @@ async function abonnerTempsReelDeck() {
         await pb.collection('participants').subscribe('*', async (e) => {
             if (e.record && e.record.aventures && e.record.aventures !== aventureId) return;
 
-            if (e.action === 'delete' && e.record && e.record.utilisateur === userId) {
-                alert("Vous avez été retiré de cette aventure.");
-                window.location.href = "accueil.html";
+            const recUserId = (typeof e.record?.utilisateur === 'object' && e.record.utilisateur !== null)
+                ? e.record.utilisateur.id
+                : e.record?.utilisateur;
+
+            if (e.action === 'delete' && (recUserId === userId || e.record?.id === monParticipantId)) {
+                redirigerExpulsion();
                 return;
             }
 
             await chargerParticipants();
+
+            if (userId && userId !== createurAventureId) {
+                const estToujoursParticipant = participantsAventure.some(p => {
+                    const pId = (typeof p.utilisateur === 'object' && p.utilisateur !== null) ? p.utilisateur.id : p.utilisateur;
+                    return pId === userId;
+                });
+                if (!estToujoursParticipant) {
+                    redirigerExpulsion();
+                    return;
+                }
+            }
+
             afficherJoueurs();
             afficherDeck();
             rafraichirCatalogueAffichage();
