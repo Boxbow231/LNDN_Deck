@@ -303,6 +303,7 @@ window.supprimerAmi = async function(idAmiTable) {
         console.error("Erreur lors de la suppression de l'ami :", err);
         alert("Impossible de retirer cet ami.");
     }
+}
 // 6. GESTION DU TEMPS RÉEL (TEMPS RÉEL SANS RECHARGEMENT)
 let timerRafraichirAmis = null;
 function rafraichirListesAmis() {

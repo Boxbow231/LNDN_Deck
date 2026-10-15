@@ -26,7 +26,7 @@ function normaliserIdUtilisateur(val) {
 }
 
 function redirigerExpulsion() {
-    sessionStorage.setItem('message_expulsion', "Vous avez été expulsé de cette aventure.");
+    sessionStorage.setItem('message_expulsion', "Vous avez été exclu de cette aventure.");
     window.location.href = "accueil.html";
 }
 
@@ -134,14 +134,27 @@ window.changerDroitParticipant = async function(id, nouvellePermission) {
 };
 
 window.expulserParticipant = async function(id, nom) {
-    if (!confirm(`Veux-tu vraiment expulser ${nom} de l'aventure ? Son héros et son deck seront définitivement supprimés.`)) return;
-    try {
-        const part = participantsAventure.find(p => p.id === id);
-        const targetUserId = part ? normaliserIdUtilisateur(part.utilisateur || part.expand?.utilisateur) : null;
+    const part = participantsAventure.find(p => p.id === id);
+    if (!part) return;
 
-        if (targetUserId) {
-            // 1. Supprimer tous les héros et decks de ce participant dans cette aventure
-            try {
+    const estDejaSpectateur = (part.permission === 'spectateur');
+
+    if (estDejaSpectateur) {
+        if (!confirm(`Ce joueur est déjà Spectateur. Veux-tu l'exclure DÉFINITIVEMENT de l'aventure ?`)) return;
+        try {
+            await pb.collection('participants').delete(id);
+            participantsAventure = participantsAventure.filter(p => p.id !== id);
+            await chargerParticipants();
+            afficherInvites();
+        } catch(e) {
+            alert("Erreur lors de l'exclusion définitive.");
+        }
+    } else {
+        if (!confirm(`Veux-tu retirer le héros de ${nom} et le passer en mode Spectateur (Lecture Seule) ?`)) return;
+        try {
+            const targetUserId = normaliserIdUtilisateur(part.utilisateur || part.expand?.utilisateur);
+            if (targetUserId) {
+                // 1. Supprimer le héros et les decks
                 const joueursAssocies = await pb.collection('joueurs').getFullList({
                     filter: `aventure = "${aventureId}" && utilisateur = "${targetUserId}"`
                 });
@@ -149,34 +162,23 @@ window.expulserParticipant = async function(id, nom) {
                     const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"` });
                     for (const d of decks) { await pb.collection('decks').delete(d.id); }
                     await pb.collection('joueurs').delete(j.id);
+                    
+                    // CORRECTION DU CRASH : On désélectionne le joueur s'il était actif
+                    if (joueurActif && joueurActif.id === j.id) {
+                        joueurActif = null;
+                    }
                 }
-            } catch (errJoueurs) {
-                console.warn("Erreur suppression joueurs lors de l'expulsion :", errJoueurs);
             }
-
-            // 2. Supprimer toutes les entrées de ce participant pour cette aventure
-            try {
-                const participantsRecords = await pb.collection('participants').getFullList({
-                    filter: `aventures = "${aventureId}" && utilisateur = "${targetUserId}"`
-                });
-                for (const p of participantsRecords) {
-                    await pb.collection('participants').delete(p.id);
-                }
-            } catch (errParts) {
-                console.warn("Erreur suppression participants lors de l'expulsion :", errParts);
-            }
-        } else {
-            await pb.collection('participants').delete(id);
+            // 2. Mettre à jour en spectateur au lieu de le supprimer
+            await pb.collection('participants').update(id, { permission: 'spectateur' });
+            
+            await chargerParticipants();
+            await chargerJoueurs(pb.authStore.model.id);
+            afficherInvites();
+        } catch(e) {
+            alert("Erreur lors du passage en spectateur.");
+            console.error(e);
         }
-
-        participantsAventure = participantsAventure.filter(p => p.id !== id);
-        
-        await chargerParticipants();
-        await chargerJoueurs(pb.authStore.model.id);
-        afficherInvites();
-    } catch(e) {
-        alert("Erreur lors de l'expulsion.");
-        console.error(e);
     }
 };
 
@@ -223,7 +225,7 @@ async function initialiserPage() {
                 }).catch(e => console.warn("Création participant créateur ignorée :", e));
             }
         } else {
-            // L'utilisateur n'est pas le créateur : vérifier s'il fait encore partie de l'aventure
+            // L'utilisateur n'est pas le créateur : vérifier s'il fait encore partie des participants
             let monParticipant = null;
             try {
                 monParticipant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
@@ -231,15 +233,8 @@ async function initialiserPage() {
                 monParticipant = null;
             }
 
-            let monJoueur = null;
-            try {
-                monJoueur = await pb.collection('joueurs').getFirstListItem(`aventure = "${aventureId}" && utilisateur = "${userId}"`);
-            } catch (e) {
-                monJoueur = null;
-            }
-
-            // S'il n'est plus participant ou plus joueur, il a été expulsé ou n'a plus accès
-            if (!monParticipant || !monJoueur) {
+            // CORRECTION DE LA REDIRECTION : on vérifie uniquement s'il est participant (il a le droit de ne pas avoir de héros s'il est spectateur)
+            if (!monParticipant) {
                 redirigerExpulsion();
                 return;
             }
@@ -478,7 +473,6 @@ function afficherJoueurs() {
             const nomInvite = invitationEnAttente.expand?.receveur?.username || invitationEnAttente.expand?.receveur?.name || 'un ami';
             
             div.className = 'player-item';
-            // FORCE l'affichage en colonne pour contrer le CSS Mobile
             div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.5rem; cursor: default; background-color: rgba(218, 165, 32, 0.15); border: 1px dashed #daa520;';
 
             const peutInviter = (mesDroits === 'createur' || mesDroits === 'admin');
@@ -492,7 +486,6 @@ function afficherJoueurs() {
                             btnAnnuler;
         } else {
             div.className = 'player-item';
-            // FORCE l'affichage en colonne pour contrer le CSS Mobile
             div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.5rem; cursor: default; background-color: rgba(255, 255, 255, 0.2);';
 
             const peutCreer = (mesDroits !== 'spectateur');
@@ -635,16 +628,16 @@ async function supprimerJoueur(event, joueurId, nom) {
 
     try {
         if (!estSansCompte && joueurUtilisateurId && joueurUtilisateurId !== createurAventureId) {
-            // Supprimer le participant associé de la table participants dans PocketBase
+            // PASSAGE EN SPECTATEUR PLUTÔT QUE SUPPRESSION
             try {
                 const participantsRecords = await pb.collection('participants').getFullList({
                     filter: `aventures = "${aventureId}" && utilisateur = "${joueurUtilisateurId}"`
                 });
                 for (const p of participantsRecords) {
-                    await pb.collection('participants').delete(p.id);
+                    await pb.collection('participants').update(p.id, { permission: 'spectateur' });
                 }
             } catch (errPart) {
-                console.warn("Erreur suppression participant associé :", errPart);
+                console.warn("Erreur mise à jour participant associé :", errPart);
             }
         }
 
@@ -675,6 +668,17 @@ async function selectionnerJoueur(joueurId) {
         await executerSauvegardeDeck();
     }
     joueurActif = listeJoueurs.find(j => j.id === joueurId);
+    
+    // CORRECTION DU CRASH DE SÉLECTION
+    if (!joueurActif) {
+        cartesDuDeck = [];
+        deckRecordActif = null;
+        if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Aucun héros sélectionné';
+        afficherDeck();
+        afficherJoueurs();
+        return;
+    }
+
     afficherJoueurs();
 
     if (deckTitreJoueurEl && joueurActif) {
@@ -931,6 +935,8 @@ if (searchDeckInput) {
     searchDeckInput.addEventListener('input', () => {
         afficherDeck();
     });
+}
+
 // ==========================================
 // GESTION DU TEMPS RÉEL (SYNCHRONISATION EN DIRECT SANS RECHARGER)
 // ==========================================
@@ -965,13 +971,12 @@ async function actualiserJoueursEtSlots() {
 
         await chargerParticipants();
 
-        // Si l'utilisateur actuel n'est pas le créateur, vérifier s'il est toujours membre de l'aventure
         const userId = pb.authStore.model?.id;
         if (userId && userId !== createurAventureId) {
-            const encoreJoueur = listeJoueurs.some(j => normaliserIdUtilisateur(j.utilisateur) === userId);
             const encoreParticipant = participantsAventure.some(p => normaliserIdUtilisateur(p.utilisateur) === userId);
 
-            if (!encoreJoueur || !encoreParticipant) {
+            // CORRECTION DE LA REDIRECTION FORCÉE : On vérifie juste si on est encore dans les participants.
+            if (!encoreParticipant) {
                 redirigerExpulsion();
                 return;
             }
@@ -997,8 +1002,8 @@ async function actualiserJoueursEtSlots() {
                 } else {
                     cartesDuDeck = [];
                     deckRecordActif = null;
+                    if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Aucun héros sélectionné';
                     afficherDeck();
-                    if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Aucun héros';
                 }
             }
         } else if (listeJoueurs.length > 0) {
@@ -1021,23 +1026,19 @@ async function abonnerTempsReelDeck() {
     try {
         const userId = pb.authStore.model?.id;
 
-        // 1. Modifications des DECKS (cartes ajoutées/retirées)
+        // 1. Modifications des DECKS
         await pb.collection('decks').subscribe('*', async (e) => {
-            // Est-ce un deck de notre aventure ?
             const joueurAssocie = listeJoueurs.find(j => j.id === e.record.joueur);
             if (!joueurAssocie) return;
 
-            // Mettre à jour les quotas du catalogue pour tout le monde
             debouncedMajCartesCatalogue();
 
-            // Si c'est le deck actuellement affiché à l'écran
             if (joueurActif && e.record.joueur === joueurActif.id) {
                 const serverCotes = Array.isArray(e.record.cartes) ? e.record.cartes : [];
                 const localCotes = cartesDuDeck.map(c => c.cote);
                 const estIdentique = serverCotes.length === localCotes.length &&
                     serverCotes.every((val, idx) => val === localCotes[idx]);
 
-                // Si modifié par un autre joueur ou un autre onglet
                 if (!estIdentique && !timerSauvegardeDeck && !sauvegardeEnCours) {
                     deckRecordActif = e.record;
                     cartesDuDeck = serverCotes
@@ -1050,7 +1051,7 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 2. Invitations d'aventure (envoyées, acceptées, annulées)
+        // 2. Invitations
         await pb.collection('invitations_aventures').subscribe('*', async (e) => {
             if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
 
@@ -1068,21 +1069,14 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 3. Héros / Joueurs (nouveaux arrivés, renommés, supprimés)
+        // 3. Héros / Joueurs supprimés 
         await pb.collection('joueurs').subscribe('*', (e) => {
-            const currentUserId = pb.authStore.model?.id;
-            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
-
-            if (e.action === 'delete' && currentUserId && currentUserId !== createurAventureId && recUserId === currentUserId) {
-                redirigerExpulsion();
-                return;
-            }
-
             if (e.record && e.record.aventure && e.record.aventure !== aventureId) return;
+            // Ne redirige PLUS ici en cas de perte de héros (on peut rester spectateur)
             debouncedActualiserJoueurs();
         });
 
-        // 4. Participants et droits (permissions modifiées, expulsion)
+        // 4. Participants et droits (permissions modifiées, expulsion TOTALE)
         await pb.collection('participants').subscribe('*', async (e) => {
             const currentUserId = pb.authStore.model?.id;
             const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
@@ -1109,7 +1103,7 @@ async function abonnerTempsReelDeck() {
             rafraichirCatalogueAffichage();
         });
 
-        // 5. Aventure (titre modifié, aventure supprimée)
+        // 5. Aventure
         await pb.collection('aventures').subscribe('*', (e) => {
             if (!e.record || e.record.id !== aventureId) return;
 
@@ -1124,7 +1118,7 @@ async function abonnerTempsReelDeck() {
             }
         });
 
-        // 6. Amis (si modal invitation ouverte)
+        // 6. Amis
         await pb.collection('amis').subscribe('*', (e) => {
             if (modalInvitation && modalInvitation.style.display === 'flex') {
                 if (!e.record || e.record.demandeur === userId || e.record.receveur === userId) {
