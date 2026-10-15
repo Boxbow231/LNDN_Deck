@@ -74,14 +74,12 @@ function afficherInvites() {
             '<option value="deck" ' + (part.permission === 'deck' ? 'selected' : '') + '>🃏 Modifier les decks</option>' +
             '<option value="admin" ' + (part.permission === 'admin' ? 'selected' : '') + '>👑 Gérer les héros (Admin)</option>' +
         '</select>' +
-        '<button class="btn-action btn-danger" onclick="expulserParticipant(\'' + part.id + '\', \'' + nom + '\')" style="font-size: 0.7rem; padding: 0.2rem; width: 100%;">Expulser</button>';
+        '<button class="btn-action btn-danger" onclick="expulserParticipant(\'' + part.id + '\', \'' + nom + '\')" style="font-size: 0.7rem; padding: 0.4rem; width: 100% !important; margin: 0;">Expulser</button>';
 
         const div = document.createElement('div');
         div.className = 'player-item';
-        div.style.display = 'flex';
-        div.style.flexDirection = 'column';
-        div.style.alignItems = 'flex-start';
-        div.style.gap = '0.4rem';
+        // FORCE l'affichage en colonne pour contrer le CSS Mobile
+        div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.4rem;';
 
         div.innerHTML = '<div style="font-weight: bold; font-size: 0.85rem;">👤 ' + nom + '</div>' +
                         '<div style="width: 100%;">' + htmlDroits + '</div>';
@@ -357,7 +355,6 @@ function afficherJoueurs() {
             const btnColor = estActif ? '#f4ecd8' : 'var(--encre-noire)';
             const sousTexte = estActif ? '▶ Deck actif' : 'Cliquer pour voir';
 
-            // IDENTIFICATION CLAIRE DES TYPES DE JOUEURS
             const estCreateurMainSlot = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) === 1);
             const estSansCompte = (joueurSlot.utilisateur === createurAventureId && parseInt(joueurSlot.emplacement) !== 1);
             const estMonSlot = (joueurSlot.utilisateur === pb.authStore.model.id);
@@ -365,15 +362,14 @@ function afficherJoueurs() {
             let afficherBoutonRenommer = false;
             let afficherBoutonRetirer = false;
 
-            // LOGIQUE DE SÉCURITÉ POUR LES 3 POINTS
             if (mesDroits === 'createur') {
                 afficherBoutonRenommer = true;
-                if (!estCreateurMainSlot) afficherBoutonRetirer = true; // Le créateur supprime tout le monde sauf lui-même
+                if (!estCreateurMainSlot) afficherBoutonRetirer = true; 
             } else if (mesDroits === 'admin') {
                 afficherBoutonRenommer = true;
-                if (estSansCompte) afficherBoutonRetirer = true; // L'Admin supprime QUE les héros "sans compte"
+                if (estSansCompte) afficherBoutonRetirer = true; 
             } else if (mesDroits === 'deck') {
-                if (estMonSlot) afficherBoutonRenommer = true; // L'invité de base ne renomme QUE lui-même et ne supprime rien
+                if (estMonSlot) afficherBoutonRenommer = true; 
             }
 
             let menuHtml = '';
@@ -402,17 +398,13 @@ function afficherJoueurs() {
             const nomInvite = invitationEnAttente.expand?.receveur?.username || invitationEnAttente.expand?.receveur?.name || 'un ami';
             
             div.className = 'player-item';
-            div.style.display = 'flex';
-            div.style.flexDirection = 'column';
-            div.style.gap = '0.5rem';
-            div.style.cursor = 'default';
-            div.style.backgroundColor = 'rgba(218, 165, 32, 0.15)'; 
-            div.style.border = '1px dashed #daa520';
+            // FORCE l'affichage en colonne pour contrer le CSS Mobile
+            div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.5rem; cursor: default; background-color: rgba(218, 165, 32, 0.15); border: 1px dashed #daa520;';
 
             const peutInviter = (mesDroits === 'createur' || mesDroits === 'admin');
             let btnAnnuler = '';
             if (peutInviter) {
-                btnAnnuler = '<button class="btn-action btn-danger" onclick="annulerInvitationSlot(\'' + invitationEnAttente.id + '\')" style="font-size: 0.75rem; padding: 0.3rem; margin-top: 0.3rem;">Annuler l\'invitation</button>';
+                btnAnnuler = '<button class="btn-action btn-danger" onclick="annulerInvitationSlot(\'' + invitationEnAttente.id + '\')" style="font-size: 0.75rem; padding: 0.4rem; width: 100% !important; margin: 0;">Annuler l\'invitation</button>';
             }
 
             div.innerHTML = '<div style="font-size: 0.8rem; font-weight: bold; color: #b8860b; text-align: center;">Emplacement ' + i + ' (Réservé)</div>' +
@@ -420,29 +412,25 @@ function afficherJoueurs() {
                             btnAnnuler;
         } else {
             div.className = 'player-item';
-            div.style.display = 'flex';
-            div.style.flexDirection = 'column';
-            div.style.gap = '0.5rem';
-            div.style.cursor = 'default';
-            div.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            // FORCE l'affichage en colonne pour contrer le CSS Mobile
+            div.style.cssText = 'display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 0.5rem; cursor: default; background-color: rgba(255, 255, 255, 0.2);';
 
-            // Seuls l'Admin et le Créateur ont le droit de modifier la structure de l'équipe
-            const peutCreer = (mesDroits === 'createur' || mesDroits === 'admin');
+            const peutCreer = (mesDroits !== 'spectateur');
             const peutInviter = (mesDroits === 'createur' || mesDroits === 'admin');
             
             let inputHtml = '';
             let boutonsCreationHtml = '';
             
             if (peutCreer) { 
-                inputHtml = '<input type="text" id="input-slot-' + i + '" placeholder="Nom du héros ' + i + '..." style="padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire);">';
+                inputHtml = '<input type="text" id="input-slot-' + i + '" placeholder="Nom du héros ' + i + '..." style="width: 100%; box-sizing: border-box; padding: 0.4rem; font-size: 0.8rem; text-align: center; border: 1px solid var(--encre-noire); margin: 0;">';
                 
                 let boutonInviterHtml = '';
                 if (peutInviter) {
-                    boutonInviterHtml = '<button class="btn-action" onclick="ouvrirModalInvitation(' + i + ')" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Inviter</button>';
+                    boutonInviterHtml = '<button class="btn-action" onclick="ouvrirModalInvitation(' + i + ')" style="flex: 1 !important; width: 100% !important; font-size: 0.75rem; padding: 0.4rem; margin: 0;">+ Inviter</button>';
                 }
 
-                boutonsCreationHtml = '<div style="display: flex; gap: 0.3rem;">' +
-                    '<button class="btn-action" onclick="creerJoueurSlot(' + i + ')" style="flex: 1; font-size: 0.75rem; padding: 0.3rem;">+ Créer</button>' +
+                boutonsCreationHtml = '<div style="display: flex; gap: 0.3rem; width: 100%;">' +
+                    '<button class="btn-action" onclick="creerJoueurSlot(' + i + ')" style="flex: 1 !important; width: 100% !important; font-size: 0.75rem; padding: 0.4rem; margin: 0;">+ Créer</button>' +
                     boutonInviterHtml +
                 '</div>';
             }
@@ -514,7 +502,6 @@ async function renommerJoueur(event, joueurId, ancienNom) {
     event.stopPropagation();
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 
-    // Sécurité backend-like
     const joueurARenommer = listeJoueurs.find(j => j.id === joueurId);
     if (joueurARenommer && mesDroits === 'deck' && joueurARenommer.utilisateur !== pb.authStore.model.id) {
         alert("Vous ne pouvez renommer que votre propre héros.");
