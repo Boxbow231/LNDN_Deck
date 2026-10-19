@@ -1,0 +1,6 @@
+**/pb_data/
+pocketbase_*/pb_data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

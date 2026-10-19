@@ -1,0 +1,486 @@
+/* =======================================================
+   EN-TÊTE PAGE DECK (PC)
+   ======================================================= */
+.deck-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0.5rem 2rem; 
+    background-color: var(--fond-parchemin, #f4ecd8); 
+    border-bottom: 2px solid var(--encre-noire); 
+    width: 100%; 
+    box-sizing: border-box; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header-logo-link {
+    display: flex; 
+    align-items: center; 
+    width: 250px; /* Largeur fixe pour équilibrer sur PC */
+    text-decoration: none;
+}
+
+.header-logo-link img {
+    max-height: 55px; 
+    width: auto;
+}
+
+.deck-header h2 {
+    font-family: 'Cinzel', serif; 
+    margin: 0; 
+    font-size: 1.6rem; 
+    text-align: center; 
+    flex-grow: 1;
+}
+
+.header-action {
+    width: 250px; /* Largeur fixe pour équilibrer sur PC */
+    text-align: right;
+}
+
+.header-action .btn-action {
+    text-decoration: none; 
+    padding: 0.4rem 1rem; 
+    font-size: 0.9rem; 
+    margin: 0; 
+    display: inline-block;
+}
+
+/* =======================================================
+   PIED DE PAGE (FOOTER)
+   ======================================================= */
+.game-footer {
+    text-align: center;
+    padding: 2rem 1rem 1rem 1rem;
+    margin-top: 4rem; /* Laisse de l'espace avec le contenu au-dessus */
+    border-top: 1px solid rgba(21, 21, 21, 0.2); /* Ligne fine et semi-transparente */
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--encre-noire);
+    width: 100%;
+    box-sizing: border-box;
+    opacity: 0.9;
+}
+
+.game-footer p {
+    margin: 0.3rem 0;
+    font-style: normal; /* Annule l'italique des paragraphes de base */
+    color: var(--encre-noire);
+    letter-spacing: 0.5px;
+}
+
+/* Aligner parfaitement le bouton Chercher avec la barre de texte */
+#btn-rechercher {
+    margin-top: 0 !important; 
+    width: auto !important;
+    padding: 0.4rem 0.8rem !important; /* On réduit l'épaisseur du bouton */
+    font-size: 0.8rem !important; /* On réduit la taille du texte */
+    align-self: center; /* S'assure qu'il est bien centré verticalement avec la barre */
+}
+
+/* =======================================================
+   VERSION MOBILE (S'active si l'écran fait moins de 768px)
+   ======================================================= */
+@media (max-width: 768px) {
+    /* 1. Réduire les marges et les boîtes pour gagner de la place */
+    .container, .auth-container, .panel {
+        padding: 1rem !important;
+        margin: 0.5rem auto !important;
+        width: 95% !important;
+        box-sizing: border-box;
+    }
+
+    /* 2. Casser les colonnes (ex: Page Amis) pour les mettre l'une sous l'autre */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* 4. Réduire la taille des grands textes */
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.3rem !important; }
+
+    /* 5 & 6. Adapter les listes (Amis, Cartes) pour qu'ils restent sur une ligne alignée */
+    .player-item, .card-item, div[style*="justify-content: space-between"] {
+        flex-direction: row !important; 
+        align-items: baseline !important; /* ALIGNEMENT PARFAIT DU TEXTE */
+        gap: 0.5rem !important;
+    }
+    
+    .player-item button, .card-item button, div[style*="justify-content: space-between"] button {
+        width: auto !important; 
+        padding: 0.4rem 0.8rem !important; 
+        font-size: 0.8rem !important;
+        margin-top: 0 !important; /* Annule tout décalage */
+        flex-shrink: 0; /* Empêche le bouton de s'écraser */
+    }
+
+    /* Annuler le décalage des boutons dans les listes (pour qu'ils soient centrés avec le texte) */
+    .player-item button, .card-item button {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    align-self: center !important;
+}
+
+    /* 7. Centrer le logo et réduire sa taille */
+    .game-logo {
+        max-width: 180px !important;
+        margin: 0 auto;
+        display: block;
+    }
+
+    /* 8. Adapter l'en-tête de la page Deck pour Mobile (Strict) */
+    .deck-header {
+        flex-direction: row; 
+        padding: 0.5rem; 
+        gap: 0.5rem;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-logo-link, .header-action {
+        width: auto !important; 
+        min-width: 0 !important;
+        flex-shrink: 1 !important; /* Autorise le rétrécissement sur les petits écrans */
+    }
+
+    .header-logo-link img {
+        max-height: 35px; 
+    }
+
+    .deck-header h2 {
+        font-size: 0.95rem !important; 
+        flex-grow: 1; 
+        text-align: center;
+        min-width: 0 !important; 
+        word-wrap: break-word !important; /* Permet au texte de se tordre si besoin */
+        line-height: 1.2;
+    }
+    
+    .header-action .btn-action {
+        width: auto !important; 
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem; 
+    }
+}
+
+/* =======================================================
+   VERSION ULTRA-MOBILE (Galaxy Z-Fold, < 400px)
+   ======================================================= */
+@media (max-width: 400px) {
+    /* 1. On raccourcit le bouton pour donner de la place au titre */
+    .header-action .btn-action {
+        font-size: 0 !important; 
+        padding: 0.3rem 0.6rem !important;
+    }
+    
+    .header-action .btn-action::after {
+        content: "Retour"; /* PLUS D'ÉMOJI BUGGÉ */
+        font-size: 0.75rem;
+    }
+
+    /* 2. On réduit un poil le logo */
+    .header-logo-link img {
+        max-height: 25px !important;
+    }
+
+    /* 3. Réduire la barre de recherche pour les très petits écrans */
+    #recherche-pseudo {
+        font-size: 0.75rem !important; /* Réduit la taille du texte à l'intérieur */
+        padding: 0.3rem 0.5rem !important; /* Rend la barre moins massive */
+    }
+
+    /* On en profite pour affiner encore un peu le bouton Chercher à côté */
+    #btn-rechercher {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+}
+
+/* Importation de polices fantasy/médiévales et manuscrites */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;800&family=Special+Elite&family=Cormorant+Garamond:ital,wght@0,600;1,400&display=swap');
+
+:root {
+    --bg-parchment: #e6dfcc; /* Couleur parchemin de la boîte */
+    --parchment-light: #f4eee1; /* Intérieur des encadrés */
+    --encre-noire: #151515; /* Encre très sombre */
+    --bordeaux: #4a0e17; /* Teinte sombre optionnelle pour des accents d'encre */
+    --gris-dessin: #3a3a35; /* Pour les ombres légères et lignes secondaires */
+}
+/* Balise racine : on lui donne tout le fond parcheminé pour éviter les coupures */
+html {
+    min-height: 100vh;
+    background-color: var(--bg-parchment);
+    background-image: 
+        radial-gradient(circle at 30% 20%, rgba(0, 0, 0, 0.03) 0%, transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(139, 115, 85, 0.1) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Base du site */
+body {
+    margin: 0;
+    padding: 0; 
+    font-family: 'Cormorant Garamond', serif;
+    background-color: transparent; /* Laisse voir le fond du HTML */
+    color: var(--encre-noire);
+    min-height: 100vh;
+    max-width: 100vw;
+    overflow-x: hidden;
+    /* On ajoute un padding invisible pour empêcher la fusion des marges (le bug de l'en-tête) */
+    padding-top: 0.1px; 
+}
+
+/* Le conteneur en mode "Parchemin / Carte ancienne" */
+.auth-container {
+    background-color: var(--parchment-light);
+    padding: 3rem 2rem 2.5rem;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+    box-shadow: 
+        3px 5px 15px rgba(0, 0, 0, 0.2),
+        inset 0 0 30px rgba(139, 115, 85, 0.15);
+    border: 2px solid var(--encre-noire);
+    outline: 1px solid var(--encre-noire);
+    outline-offset: -5px;
+    
+    /* Centrage vertical et horizontal indépendant */
+    margin: 10vh auto auto auto;
+    box-sizing: border-box;
+}
+
+/* Illustration discrète (style estampe / dessin) aux angles */
+.auth-container::before {
+    content: "📜";
+    font-size: 1.2rem;
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    opacity: 0.7;
+}
+
+/* Logo "LES NOMINÉS DU NÉOMBRE" reproduisant le style de la boîte */
+h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.8rem;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 0.2rem;
+    color: var(--encre-noire);
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    /* Soulignement avec effet double-trait irrégulier comme l'épée */
+    position: relative;
+    padding-bottom: 15px;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 15%;
+    width: 70%;
+    height: 3px;
+    background-color: var(--encre-noire);
+    box-shadow: 0 3px 0 var(--encre-noire);
+    clip-path: polygon(0 40%, 100% 0, 95% 80%, 2% 100%); /* Ébréchures */
+}
+
+h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    opacity: 0.85;
+}
+
+/* Organisation des champs */
+.form-group {
+    margin-bottom: 1.4rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Polices anciennes pour les labels */
+.form-group label {
+    margin-bottom: 0.4rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--encre-noire);
+}
+
+/* Saisie de texte façon manuscrit/dessin de boîte */
+.form-group input {
+    padding: 0.65rem 0.8rem;
+    border: 2px solid var(--encre-noire);
+    background-color: transparent;
+    color: var(--encre-noire);
+    font-family: 'Special Elite', monospace; /* Esprit machine à écrire d'époque */
+    font-size: 0.95rem;
+    border-radius: 5px 2px 4px 3px; /* Asymétrie pour le fait-main */
+    transition: all 0.2s ease-in-out;
+}
+
+.form-group input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(21, 21, 21, 0.15);
+    background-color: rgba(21, 21, 21, 0.02);
+}
+
+/* Boutons "Croquis d'encre" */
+button {
+    width: 100%;
+    padding: 0.9rem;
+    margin-top: 0.8rem;
+    background-color: var(--encre-noire);
+    color: var(--bg-parchment);
+    border: 2px solid var(--encre-noire);
+    border-radius: 3px 6px 2px 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0 var(--encre-noire);
+}
+
+/* Effet survol qui garde l'esprit encre en inversant */
+button:hover {
+    background-color: transparent;
+    color: var(--encre-noire);
+    box-shadow: 4px 4px 0 var(--encre-noire);
+    transform: translate(-1px, -1px);
+}
+
+button:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* Liens textuels manuscrits */
+p {
+    margin-top: 1.8rem;
+    text-align: center;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: var(--gris-dessin);
+}
+
+a {
+    color: var(--encre-noire);
+    text-decoration: underline;
+    text-decoration-style: wavy; /* Ondulation esprit manuscrit */
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--bordeaux);
+}
+
+/* Boutons illustrés avec icône thématique */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-icon img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.btn-icon:active {
+    transform: translateY(0);
+}
+
+/* Menu contextuel à 3 points */
+.action-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-dots {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.2rem 0.6rem;
+    line-height: 1;
+    color: var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.btn-dots:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--fond-parchemin, #f4ecd8);
+    border: 1px solid var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    min-width: 140px;
+    z-index: 100;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-item {
+    padding: 0.6rem 1rem;
+    text-align: left;
+    background: transparent;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--encre-noire);
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+}
+
+.dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-item.danger {
+    color: #8b0000;
+}
+
+.dropdown-item.danger:hover {
+    background: rgba(139, 0, 0, 0.1);
+}
