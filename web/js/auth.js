@@ -1,4 +1,6 @@
-const pb = new PocketBase('http://127.0.0.1:8090');
+const isLocal = !window.location.hostname || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const pbUrl = isLocal ? 'http://127.0.0.1:8090' : '/';
+const pb = new PocketBase(pbUrl);
 
 // 1. Initialisation (savoir sur quelle page on est)
 const currentPage = window.location.pathname;
@@ -45,9 +47,12 @@ if (registerForm) {
             
         } catch (error) {
             console.error("Erreur PocketBase :", error);
-            
-            // GRÂCE À TON INDEX UNIQUE, si ça plante, on sait que c'est le mail OU le pseudo !
-            alert("Impossible de créer l'aventure. Ce pseudo ou cette adresse e-mail est déjà utilisé(e) par un autre joueur !");
+            const msg = error?.response?.message || error?.message || "";
+            let detailStr = "";
+            if (error?.response?.data) {
+                detailStr = Object.entries(error.response.data).map(([k, v]) => k + ": " + (v.message || v)).join(", ");
+            }
+            alert("Impossible de créer l'aventure : " + (detailStr || msg || "Erreur de connexion à la base de données."));
         }
     });
 }

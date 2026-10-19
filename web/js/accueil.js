@@ -3,6 +3,13 @@ const createForm = document.getElementById('create-aventure-form');
 const zoneInvitations = document.getElementById('zone-invitations-aventure');
 const listeInvitations = document.getElementById('invitations-aventure-liste');
 
+function normaliserIdUtilisateur(val) {
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val.id) return val.id;
+    return String(val);
+}
+
 // 1. On intègre les vrais decks de base selon l'emplacement
 const DECKS_DE_BASE = {
     1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"],
@@ -26,10 +33,10 @@ async function chargerAventures() {
         const nomJoueur = pb.authStore.model.username || pb.authStore.model.name || 'Héros';
         userGreetingEl.innerHTML = `👤 ${nomJoueur}`;
     }
-    
+
     try {
         const userId = pb.authStore.model.id;
-        
+
         const mesAventures = await pb.collection('aventures').getFullList({
             filter: `createur = "${userId}"`,
             sort: '-created'
@@ -126,7 +133,7 @@ async function chargerInvitationsAventures() {
         if (invitations.length > 0) {
             zoneInvitations.style.display = 'block';
             listeInvitations.innerHTML = '';
-            
+
             invitations.forEach(inv => {
                 const av = inv.expand?.aventure;
                 const demandeur = inv.expand?.demandeur;
@@ -161,23 +168,20 @@ async function chargerInvitationsAventures() {
     }
 }
 
-window.accepterInvitationAventure = async function(invitationId, aventureId) {
+window.accepterInvitationAventure = async function (invitationId, aventureId) {
     const ligne = document.getElementById(`invit-av-${invitationId}`);
     if (ligne) ligne.remove();
 
-    // On cache immédiatement la notification si c'était la dernière invitation
     if (listeInvitations.children.length === 0) {
         zoneInvitations.style.display = 'none';
     }
 
     try {
         const userId = pb.authStore.model.id;
-        
-        // 1. Récupération de l'invitation pour connaître l'emplacement exact (Bug corrigé !)
+
         const invitation = await pb.collection('invitations_aventures').getOne(invitationId);
         const emplacementId = invitation.emplacement || 1;
 
-        // 2. On crée le joueur avec son emplacement
         const nouveauJoueur = await pb.collection('joueurs').create({
             aventure: aventureId,
             utilisateur: userId,
@@ -185,41 +189,36 @@ window.accepterInvitationAventure = async function(invitationId, aventureId) {
             emplacement: emplacementId
         });
 
-        // 3. On lui donne le deck de base spécifique à sa zone
         const deckDeDepart = DECKS_DE_BASE[emplacementId] || DECKS_DE_BASE[1];
         await pb.collection('decks').create({
             joueur: nouveauJoueur.id,
             cartes: deckDeDepart
         });
 
-        // 4. On ajoute le joueur à la table "participants" pour qu'il apparaisse dans les paramètres du Créateur
         try {
             await pb.collection('participants').create({
                 aventures: aventureId,
                 utilisateur: userId,
-                permission: 'deck' // Droit de base pour qu'il puisse éditer ses cartes
+                permission: 'deck'
             });
-        } catch(e) {
+        } catch (e) {
             console.log("Déjà participant.", e);
         }
 
-        // 5. On détruit l'invitation
         await pb.collection('invitations_aventures').delete(invitationId);
-        
-        // On rafraîchit l'affichage
+
         chargerAventures();
         chargerInvitationsAventures();
     } catch (err) {
         console.error(err);
-        chargerInvitationsAventures(); // Rétablit l'erreur visuelle
+        chargerInvitationsAventures();
     }
 }
 
-window.refuserInvitationAventure = async function(invitationId) {
+window.refuserInvitationAventure = async function (invitationId) {
     const ligne = document.getElementById(`invit-av-${invitationId}`);
     if (ligne) ligne.remove();
 
-    // On cache immédiatement la notification si c'était la dernière
     if (listeInvitations.children.length === 0) {
         zoneInvitations.style.display = 'none';
     }
@@ -248,8 +247,7 @@ window.addEventListener('click', () => {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
 });
 
-// Action exclusive au créateur
-window.modifierAventure = async function(aventureId, ancienTitre) {
+window.modifierAventure = async function (aventureId, ancienTitre) {
     const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure :", ancienTitre);
     if (!nouveauTitre || nouveauTitre.trim() === "" || nouveauTitre.trim() === ancienTitre) return;
     try {
@@ -260,8 +258,7 @@ window.modifierAventure = async function(aventureId, ancienTitre) {
     }
 }
 
-// Action exclusive au créateur
-window.supprimerAventure = async function(aventureId, titre) {
+window.supprimerAventure = async function (aventureId, titre) {
     const confirmation = confirm(`Es-tu sûr de vouloir supprimer définitivement l'aventure "${titre}" ainsi que tous les joueurs et decks associés ?`);
     if (!confirmation) return;
     try {
@@ -278,34 +275,29 @@ window.supprimerAventure = async function(aventureId, titre) {
     }
 }
 
-// Action exclusive à l'invité
-window.quitterAventure = async function(aventureId, titre) {
+window.quitterAventure = async function (aventureId, titre) {
     const confirmation = confirm(`Es-tu sûr de vouloir quitter l'aventure "${titre}" ? Ton héros et ton deck seront supprimés de cette quête.`);
     if (!confirmation) return;
-    
+
     try {
         const userId = pb.authStore.model.id;
-        
-        // 1. Trouver MON instance de joueur dans cette aventure
+
         const joueur = await pb.collection('joueurs').getFirstListItem(`aventure = "${aventureId}" && utilisateur = "${userId}"`);
-        
-        // 2. Supprimer MES decks
+
         const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${joueur.id}"` });
         for (const deck of decks) { await pb.collection('decks').delete(deck.id); }
-        
-        // 3. Me supprimer de l'aventure
+
         await pb.collection('joueurs').delete(joueur.id);
 
-        // 4. Me retirer de la table "participants" (Bug corrigé !)
         try {
             const participant = await pb.collection('participants').getFirstListItem(`aventures = "${aventureId}" && utilisateur = "${userId}"`);
             if (participant) {
                 await pb.collection('participants').delete(participant.id);
             }
-        } catch(e) {
+        } catch (e) {
             console.log("Déjà retiré de la table participants.");
         }
-        
+
         await chargerAventures();
     } catch (err) {
         console.error("Erreur lors de l'abandon de l'aventure :", err);
@@ -334,7 +326,6 @@ if (createForm) {
                 createur: userId
             });
 
-            // Le créateur est toujours sur l'emplacement 1 par défaut
             const joueur = await pb.collection('joueurs').create({
                 aventure: nouvelleAventure.id,
                 utilisateur: userId,
@@ -372,7 +363,7 @@ if (btnMonCompte) {
         document.getElementById('compte-new-mdp').value = '';
         document.getElementById('compte-new-mdp-confirm').value = '';
         document.getElementById('compte-old-mdp').value = '';
-        
+
         modalCompte.style.display = 'flex';
     });
 }
@@ -386,7 +377,7 @@ if (fermerModalCompte) {
 if (formMonCompte) {
     formMonCompte.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const newPseudo = document.getElementById('compte-new-pseudo').value.trim();
         const newMdp = document.getElementById('compte-new-mdp').value;
         const newMdpConfirm = document.getElementById('compte-new-mdp-confirm').value;
@@ -417,26 +408,26 @@ if (formMonCompte) {
                     const verification = await pb.collection('users').getFirstListItem(`(username = "${newPseudo}" || name = "${newPseudo}") && id != "${pb.authStore.model.id}"`);
                     if (verification) {
                         alert("Ce pseudo est déjà pris par un autre joueur.");
-                        return; 
+                        return;
                     }
-                } catch (err) {} 
+                } catch (err) { }
             }
 
             await pb.collection('users').update(pb.authStore.model.id, updateData);
-            
+
             alert("Profil mis à jour avec succès !");
-            
+
             const spanPseudo = document.getElementById('compte-pseudo');
             if (spanPseudo) spanPseudo.textContent = newPseudo;
             pb.authStore.model.username = newPseudo;
             pb.authStore.model.name = newPseudo;
-            
+
             document.getElementById('compte-new-mdp').value = '';
             document.getElementById('compte-new-mdp-confirm').value = '';
             document.getElementById('compte-old-mdp').value = '';
 
             modalCompte.style.display = 'none';
-            
+
         } catch (err) {
             console.error("Erreur détaillée de PocketBase :", err);
             let messageErreur = "Erreur lors de la mise à jour.";
@@ -447,6 +438,146 @@ if (formMonCompte) {
     });
 }
 
+// ==========================================
+// 6. GESTION DU TEMPS RÉEL (SANS RECHARGER LA PAGE)
+// ==========================================
+let timerAventures = null;
+function debouncedChargerAventures() {
+    clearTimeout(timerAventures);
+    timerAventures = setTimeout(async () => {
+        await chargerAventures();
+    }, 150);
+}
+
+let timerInvitations = null;
+function debouncedChargerInvitations() {
+    clearTimeout(timerInvitations);
+    timerInvitations = setTimeout(async () => {
+        await chargerInvitationsAventures();
+    }, 150);
+}
+
+async function abonnerTempsReelAccueil() {
+    try {
+        const userId = pb.authStore.model?.id;
+
+        await pb.collection('invitations_aventures').subscribe('*', (e) => {
+            if (!e.record || e.record.receveur === userId || e.record.demandeur === userId) {
+                debouncedChargerInvitations();
+            }
+        });
+
+        await pb.collection('aventures').subscribe('*', () => {
+            debouncedChargerAventures();
+        });
+
+        await pb.collection('joueurs').subscribe('*', (e) => {
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
+            if (!e.record || recUserId === userId) {
+                debouncedChargerAventures();
+            }
+        });
+
+        await pb.collection('participants').subscribe('*', (e) => {
+            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
+            if (!e.record || recUserId === userId) {
+                debouncedChargerAventures();
+            }
+        });
+    } catch (err) {
+        console.error("Erreur d'abonnement temps réel (accueil) :", err);
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    pb.collection('invitations_aventures').unsubscribe('*').catch(() => { });
+    pb.collection('aventures').unsubscribe('*').catch(() => { });
+    pb.collection('joueurs').unsubscribe('*').catch(() => { });
+    pb.collection('participants').unsubscribe('*').catch(() => { });
+});
+
 // Initialisation au chargement de la page
-chargerInvitationsAventures();
-chargerAventures();
+async function initialiserAccueil() {
+    const msgExpulsion = sessionStorage.getItem('message_expulsion');
+    if (msgExpulsion) {
+        sessionStorage.removeItem('message_expulsion');
+        setTimeout(() => alert(msgExpulsion), 50);
+    }
+
+    await chargerInvitationsAventures();
+    await chargerAventures();
+    abonnerTempsReelAccueil();
+}
+
+// ==========================================
+// 7. SUPPRESSION DU COMPTE
+// ==========================================
+const btnSupprimerCompte = document.getElementById('btn-supprimer-compte');
+if (btnSupprimerCompte) {
+    btnSupprimerCompte.addEventListener('click', async () => {
+        const conf1 = confirm("⚠️ Êtes-vous sûr de vouloir supprimer DÉFINITIVEMENT votre compte ? Cette action est irréversible.");
+        if (!conf1) return;
+
+        const conf2 = prompt("Pour confirmer, tapez 'SUPPRIMER' en majuscules :");
+        if (conf2 !== "SUPPRIMER") {
+            alert("Suppression annulée.");
+            return;
+        }
+
+        try {
+            const userId = pb.authStore.model.id;
+
+            // 1. Transformer les héros en "sans compte" (les confier au créateur de l'aventure)
+            const mesJoueurs = await pb.collection('joueurs').getFullList({
+                filter: `utilisateur = "${userId}"`,
+                expand: 'aventure'
+            });
+
+            for (const j of mesJoueurs) {
+                if (j.expand && j.expand.aventure) {
+                    const createurId = j.expand.aventure.createur;
+                    if (createurId !== userId) {
+                        await pb.collection('joueurs').update(j.id, { utilisateur: createurId });
+                    }
+                }
+            }
+
+            // 2. Supprimer les relations d'amis
+            const mesAmis = await pb.collection('amis').getFullList({
+                filter: `demandeur = "${userId}" || receveur = "${userId}"`
+            });
+            for (const ami of mesAmis) {
+                await pb.collection('amis').delete(ami.id);
+            }
+
+            // 3. Me retirer de la table participants
+            const mesParticipations = await pb.collection('participants').getFullList({
+                filter: `utilisateur = "${userId}"`
+            });
+            for (const p of mesParticipations) {
+                await pb.collection('participants').delete(p.id);
+            }
+
+            // 4. Supprimer les invitations en attente
+            const mesInvitations = await pb.collection('invitations_aventures').getFullList({
+                filter: `demandeur = "${userId}" || receveur = "${userId}"`
+            });
+            for (const inv of mesInvitations) {
+                await pb.collection('invitations_aventures').delete(inv.id);
+            }
+
+            // 5. Supprimer le compte utilisateur
+            await pb.collection('users').delete(userId);
+
+            alert("Votre compte a été supprimé avec succès. Au revoir !");
+            pb.authStore.clear();
+            window.location.href = "connexion.html";
+
+        } catch (err) {
+            console.error("Erreur suppression compte :", err);
+            alert("Erreur lors de la suppression. Veuillez vous assurer que la règle 'Delete' de la table 'users' est bien débloquée (ouverte avec la technique de l'espace) dans l'onglet API Rules de PocketBase.");
+        }
+    });
+}
+
+initialiserAccueil();
