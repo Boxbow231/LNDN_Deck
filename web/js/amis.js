@@ -1,6 +1,4 @@
-const isLocal = !window.location.hostname || window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
-const pbUrl = isLocal ? 'http://127.0.0.1:8090' : '/';
-const pb = new PocketBase(pbUrl);
+const pb = new PocketBase('http://127.0.0.1:8090');
 
 // Récupération de l'ID compatible avec TOUTES les versions de PocketBase
 function getUserId() {
@@ -32,9 +30,6 @@ async function initialiserPage() {
 
     await chargerAmis();
     await chargerDemandes();
-
-    // Abonnement aux mises à jour en direct (sans recharger la page)
-    abonnerTempsReelAmis();
 }
 
 // 1. Rechercher un joueur dans la base
@@ -304,32 +299,5 @@ window.supprimerAmi = async function(idAmiTable) {
         alert("Impossible de retirer cet ami.");
     }
 }
-// 6. GESTION DU TEMPS RÉEL (TEMPS RÉEL SANS RECHARGEMENT)
-let timerRafraichirAmis = null;
-function rafraichirListesAmis() {
-    clearTimeout(timerRafraichirAmis);
-    timerRafraichirAmis = setTimeout(async () => {
-        await chargerAmis();
-        await chargerDemandes();
-    }, 120);
-}
-
-async function abonnerTempsReelAmis() {
-    try {
-        await pb.collection('amis').subscribe('*', (e) => {
-            const userId = getUserId();
-            // On rafraîchit si l'événement concerne l'utilisateur actuel
-            if (!e.record || e.record.demandeur === userId || e.record.receveur === userId) {
-                rafraichirListesAmis();
-            }
-        });
-    } catch (err) {
-        console.error("Erreur d'abonnement temps réel (amis) :", err);
-    }
-}
-
-window.addEventListener('beforeunload', () => {
-    pb.collection('amis').unsubscribe('*').catch(() => {});
-});
 
 initialiserPage();

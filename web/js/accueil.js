@@ -3,13 +3,6 @@ const createForm = document.getElementById('create-aventure-form');
 const zoneInvitations = document.getElementById('zone-invitations-aventure');
 const listeInvitations = document.getElementById('invitations-aventure-liste');
 
-function normaliserIdUtilisateur(val) {
-    if (!val) return '';
-    if (typeof val === 'string') return val;
-    if (typeof val === 'object' && val.id) return val.id;
-    return String(val);
-}
-
 // 1. On intègre les vrais decks de base selon l'emplacement
 const DECKS_DE_BASE = {
     1: ["D1B01", "D1B02", "D1B03", "D1B04", "D1B04", "D1B05", "D1B06", "D1B07", "D1B08", "D1B09", "D1B10", "D1B11", "D1B11", "D1B12", "D1B12"],
@@ -454,80 +447,6 @@ if (formMonCompte) {
     });
 }
 
-// ==========================================
-// 6. GESTION DU TEMPS RÉEL (SANS RECHARGER LA PAGE)
-// ==========================================
-let timerAventures = null;
-function debouncedChargerAventures() {
-    clearTimeout(timerAventures);
-    timerAventures = setTimeout(async () => {
-        await chargerAventures();
-    }, 150);
-}
-
-let timerInvitations = null;
-function debouncedChargerInvitations() {
-    clearTimeout(timerInvitations);
-    timerInvitations = setTimeout(async () => {
-        await chargerInvitationsAventures();
-    }, 150);
-}
-
-async function abonnerTempsReelAccueil() {
-    try {
-        const userId = pb.authStore.model?.id;
-
-        // Invitations d'aventure reçues ou annulées
-        await pb.collection('invitations_aventures').subscribe('*', (e) => {
-            if (!e.record || e.record.receveur === userId || e.record.demandeur === userId) {
-                debouncedChargerInvitations();
-            }
-        });
-
-        // Aventures créées, renommées ou supprimées
-        await pb.collection('aventures').subscribe('*', () => {
-            debouncedChargerAventures();
-        });
-
-        // Joueurs ajoutés / retirés des aventures
-        await pb.collection('joueurs').subscribe('*', (e) => {
-            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
-            if (!e.record || recUserId === userId) {
-                debouncedChargerAventures();
-            }
-        });
-
-        // Participants ajoutés / retirés
-        await pb.collection('participants').subscribe('*', (e) => {
-            const recUserId = normaliserIdUtilisateur(e.record?.utilisateur);
-            if (!e.record || recUserId === userId) {
-                debouncedChargerAventures();
-            }
-        });
-    } catch (err) {
-        console.error("Erreur d'abonnement temps réel (accueil) :", err);
-    }
-}
-
-window.addEventListener('beforeunload', () => {
-    pb.collection('invitations_aventures').unsubscribe('*').catch(() => {});
-    pb.collection('aventures').unsubscribe('*').catch(() => {});
-    pb.collection('joueurs').unsubscribe('*').catch(() => {});
-    pb.collection('participants').unsubscribe('*').catch(() => {});
-});
-
 // Initialisation au chargement de la page
-async function initialiserAccueil() {
-    // Vérifier si l'utilisateur a été expulsé d'une aventure
-    const msgExpulsion = sessionStorage.getItem('message_expulsion');
-    if (msgExpulsion) {
-        sessionStorage.removeItem('message_expulsion');
-        setTimeout(() => alert(msgExpulsion), 50);
-    }
-
-    await chargerInvitationsAventures();
-    await chargerAventures();
-    abonnerTempsReelAccueil();
-}
-
-initialiserAccueil();
+chargerInvitationsAventures();
+chargerAventures();
