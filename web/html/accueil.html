@@ -1,33 +1,40 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Les Nominés du Néombre - Mes Aventures</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
+
 <body>
 
     <main class="auth-container" style="max-width: 600px;">
         <!-- Barre de navigation haute (Compte et Amis) -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            
+
             <!-- Bouton Mon Compte -->
-            <button id="btn-mon-compte" class="btn-action" style="font-size: 0.85rem; padding: 0.4rem 0.8rem; width: auto; margin: 0;">
+            <button id="btn-mon-compte" class="btn-action"
+                style="font-size: 0.85rem; padding: 0.4rem 0.8rem; width: auto; margin: 0;">
                 👤 Mon compte : <span id="compte-pseudo">Héros</span>
             </button>
-            
+
             <!-- Bouton Amis -->
-            <a href="amis.html" style="text-decoration: none; color: var(--encre-noire); font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem; border: 1px solid var(--encre-noire); padding: 0.3rem 0.8rem; border-radius: 4px; transition: all 0.3s; display: block;" onmouseover="this.style.backgroundColor='var(--encre-noire)'; this.style.color='#f4ecd8';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--encre-noire)';">
+            <a href="amis.html"
+                style="text-decoration: none; color: var(--encre-noire); font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.1rem; border: 1px solid var(--encre-noire); padding: 0.3rem 0.8rem; border-radius: 4px; transition: all 0.3s; display: block;"
+                onmouseover="this.style.backgroundColor='var(--encre-noire)'; this.style.color='#f4ecd8';"
+                onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--encre-noire)';">
                 👥 Amis
             </a>
-            
+
         </div>
 
         <!-- Logo du jeu centré en dessous -->
         <div class="logo-container" style="text-align: center; margin-bottom: 2rem;">
             <a href="https://lesnominesduneombre.fr" target="_blank" rel="noopener noreferrer">
-                <img src="../image/logo_nomines.jpg" alt="Les Nominés du Néombre" class="game-logo" style="max-width: 250px;">
+                <img src="../image/logo_nomines.jpg" alt="Les Nominés du Néombre" class="game-logo"
+                    style="max-width: 250px;">
             </a>
         </div>
 
@@ -52,59 +59,85 @@
             </div>
 
             <!-- Zone des invitations d'aventure reçues -->
-            <div id="zone-invitations-aventure" style="display: none; margin-bottom: 2rem; padding: 1rem; border: 1px dashed var(--encre-noire); background-color: rgba(0,0,0,0.03);">
-                <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #8b0000;">Nouvelles requêtes de compagnonnage</h3>
+            <div id="zone-invitations-aventure"
+                style="display: none; margin-bottom: 2rem; padding: 1rem; border: 1px dashed var(--encre-noire); background-color: rgba(0,0,0,0.03);">
+                <h3
+                    style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin-top: 0; margin-bottom: 1rem; color: #8b0000;">
+                    Nouvelles requêtes de compagnonnage</h3>
                 <div id="invitations-aventure-liste" style="display: flex; flex-direction: column; gap: 0.8rem;">
                     <!-- Les invitations apparaîtront ici -->
                 </div>
             </div>
-            
+
             <!-- Déconnexion -->
             <div style="margin-top: 2rem; text-align: center;">
-                <a href="#" id="logout-btn" style="font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 0.9rem;">Quitter le Néombre (Déconnexion)</a>
+                <a href="#" id="logout-btn"
+                    style="font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 0.9rem;">Quitter le
+                    Néombre (Déconnexion)</a>
             </div>
         </section>
     </main>
 
     <!-- Modale Mon Compte -->
-    <div id="modal-compte" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
-        <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 450px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;">
-            <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center; margin-top: 0;">Gestion du Compte</h3>
-            
+    <div id="modal-compte"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="panel"
+            style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 450px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;">
+            <h3
+                style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center; margin-top: 0;">
+                Gestion du Compte</h3>
+
             <form id="form-mon-compte" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
-                
+
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Nom d'utilisateur (Pseudo)</label>
                     <input type="text" id="compte-new-pseudo" required>
                 </div>
-                
+
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Adresse E-mail (Non modifiable)</label>
-                    <input type="email" id="compte-new-email" disabled style="background-color: rgba(0,0,0,0.05); color: #666; cursor: not-allowed; border-color: #ccc;">
+                    <input type="email" id="compte-new-email" disabled
+                        style="background-color: rgba(0,0,0,0.05); color: #666; cursor: not-allowed; border-color: #ccc;">
                 </div>
-                
+
                 <hr style="border-top: 1px dashed var(--encre-noire); margin: 0.5rem 0; width: 100%;">
-                <p style="font-size: 0.8rem; text-align: center; margin: 0; color: #666; font-style: italic;">(Laissez les champs ci-dessous vides si vous ne changez pas le mot de passe)</p>
-                
+                <p style="font-size: 0.8rem; text-align: center; margin: 0; color: #666; font-style: italic;">(Laissez
+                    les champs ci-dessous vides si vous ne changez pas le mot de passe)</p>
+
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Nouveau mot de passe</label>
                     <input type="password" id="compte-new-mdp">
                 </div>
-                
+
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Confirmer le nouveau mot de passe</label>
                     <input type="password" id="compte-new-mdp-confirm">
                 </div>
-                
-                <div class="form-group" style="margin-bottom: 0; background-color: rgba(139,0,0,0.05); padding: 0.5rem; border: 1px solid rgba(139,0,0,0.2);">
-                    <label style="color: #8b0000;">Ancien mot de passe (Obligatoire UNIQUEMENT pour modifier le mot de passe)</label>
+
+                <div class="form-group"
+                    style="margin-bottom: 0; background-color: rgba(139,0,0,0.05); padding: 0.5rem; border: 1px solid rgba(139,0,0,0.2);">
+                    <label style="color: #8b0000;">Ancien mot de passe (Obligatoire UNIQUEMENT pour modifier le mot de
+                        passe)</label>
                     <input type="password" id="compte-old-mdp">
                 </div>
-                
-                <button type="submit" class="btn-action" style="margin-top: 1rem; background-color: #2e8b57; border-color: #2e8b57;">Enregistrer les modifications</button>
+
+                <button type="submit" class="btn-action"
+                    style="margin-top: 1rem; background-color: #2e8b57; border-color: #2e8b57;">Enregistrer les
+                    modifications</button>
             </form>
-            
-            <button id="fermer-modal-compte" class="btn-action btn-danger" style="margin-top: 0.8rem; width: 100%;">Fermer</button>
+
+            <!-- Zone Suppression de compte -->
+            <hr style="border-top: 1px dashed #8b0000; margin: 1.5rem 0 1rem 0; width: 100%;">
+            <button type="button" id="btn-supprimer-compte" class="btn-action"
+                style="width: 100%; background-color: #8b0000; border-color: #5a0000; color: white;">🗑️ Supprimer
+                définitivement mon compte</button>
+            <p
+                style="font-size: 0.75rem; color: #8b0000; text-align: center; margin-top: 0.5rem; font-style: italic; line-height: 1.2;">
+                Attention : Action irréversible. Vous perdrez tous vos amis et vos héros seront confiés aux créateurs
+                des aventures.</p>
+
+            <button id="fermer-modal-compte" class="btn-action btn-danger"
+                style="margin-top: 1rem; width: 100%;">Fermer</button>
         </div>
     </div>
 
@@ -118,7 +151,8 @@
     </footer>
     <!-- SDK PocketBase -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/accueil.js"></script>
+    <script src="../js/auth.js?v=6"></script>
+    <script src="../js/accueil.js?v=6"></script>
 </body>
+
 </html>
