@@ -6,12 +6,12 @@
     <title>Les Nominés du Néombre - Gestion du Deck</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* Disposition en 3 colonnes avec la sidebar */
+        /* Disposition en 4 colonnes */
         .deck-layout {
             display: grid;
-            grid-template-columns: 280px 1fr 1fr;
-            gap: 1.5rem;
-            max-width: 1400px;
+            grid-template-columns: 240px 1fr 1fr 1fr; /* 4 colonnes maintenant */
+            gap: 1.2rem;
+            max-width: 1600px; /* Plus large pour accueillir la 4ème colonne */
             margin: 1.5rem auto;
             padding: 0 1rem;
         }
@@ -25,7 +25,6 @@
             height: calc(85vh - 70px);
             display: flex;
             flex-direction: column;
-            /* CORRECTION ICI : Autorise le défilement vertical si le contenu est trop grand */
             overflow-y: auto; 
             overflow-x: hidden;
         }
@@ -63,10 +62,6 @@
             font-weight: bold;
         }
 
-        .player-item.active small {
-            color: #dcd0b8;
-        }
-
         /* Items des cartes */
         .card-item {
             border: 1px solid var(--encre-noire, #2b2b2b);
@@ -101,6 +96,28 @@
             margin-right: 0.3rem;
         }
 
+        /* Slots Vides de la Foire */
+        .foire-slot {
+            border: 2px dashed #b8860b;
+            border-radius: 6px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(184, 134, 11, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 120px;
+        }
+        .foire-slot:hover {
+            background: rgba(184, 134, 11, 0.15);
+        }
+        .foire-slot-plus {
+            font-size: 4rem;
+            color: #b8860b;
+            font-weight: normal;
+        }
+
         .btn-action {
             width: auto;
             padding: 0.4rem 0.8rem;
@@ -128,41 +145,28 @@
             }
             .panel {
                 height: auto;
-                /* Augmenté pour donner un meilleur confort visuel sur mobile */
                 max-height: 80vh; 
             }
         }
     </style>
 </head>
-<!-- On force l'affichage en bloc standard pour annuler le centrage global -->
 <body>
 
     <!-- BANNIÈRE HORIZONTALE EN HAUT -->
     <header class="deck-header">
-        
-        <!-- Logo à gauche -->
         <a href="accueil.html" class="header-logo-link">
             <img src="../image/logo_nomines.jpg" alt="Logo">
         </a>
-
-        <!-- Titre au centre -->
-        <h2 id="aventure-titre">
-            Chargement de l'aventure…
-        </h2>
-
-        <!-- Bouton Quitter à droite -->
+        <h2 id="aventure-titre">Chargement de l'aventure…</h2>
         <div class="header-action">
-            <a href="accueil.html" class="btn-action btn-danger">
-                🚪 Quitter l'aventure
-            </a>
+            <a href="accueil.html" class="btn-action btn-danger">🚪 Quitter l'aventure</a>
         </div>
-        
     </header>
 
     <main class="deck-layout">
+        <!-- 1. PANNEAU GAUCHE : Compagnons -->
         <aside class="panel">
             <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.8rem 0;">Compagnons</h3>
-
             <div style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: var(--gris-dessin); margin-bottom: 0.4rem;">Les 4 emplacements :</div>
             
             <div id="joueurs-liste" style="display: flex; flex-direction: column; gap: 1rem;">
@@ -185,11 +189,11 @@
             </div>
             
             <div class="search-box" style="margin-top: 0.8rem;">
-                <input type="text" id="search-deck-input" placeholder="Rechercher dans ce deck (nom, zone, effet)..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
+                <input type="text" id="search-deck-input" placeholder="Rechercher dans ce deck..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
             </div>
 
             <div id="deck-cartes-liste" class="cards-scroll-container">
-                <p style="text-align: center; font-style: italic;">Sélectionnez un joueur pour voir son deck.</p>
+                <p style="text-align: center; font-style: italic;">Sélectionnez un joueur.</p>
             </div>
 
             <div style="margin-top: 1rem; padding-top: 0.8rem; border-top: 2px solid var(--encre-noire); display: flex; justify-content: space-between; align-items: center;">
@@ -202,10 +206,20 @@
         <section class="panel">
             <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.8rem 0;">Catalogue des Butins</h3>
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Rechercher (nom, effet, zone)..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
+                <input type="text" id="search-input" placeholder="Rechercher (nom, effet)..." style="width: 100%; padding: 0.4rem; font-size: 0.85rem;">
             </div>
             <div id="catalogue-cartes-liste" class="cards-scroll-container">
-                <p style="text-align: center; color: var(--gris-dessin);">Chargement du catalogue…</p>
+                <p style="text-align: center; color: var(--gris-dessin);">Chargement…</p>
+            </div>
+        </section>
+
+        <!-- 4. NOUVEAU PANNEAU EXTRÊME DROIT : La Foire de Farciminis -->
+        <section class="panel" style="background-color: rgba(184, 134, 11, 0.05); border-color: #b8860b;">
+            <h3 style="font-family: 'Cinzel', serif; margin: 0 0 0.2rem 0; color: #b8860b; text-align: center;">La Foire de Farciminis</h3>
+            <p style="font-size: 0.75rem; font-style: italic; color: #666; text-align: center; margin-top: 0; margin-bottom: 1rem;">3 cartes communes disponibles pour tous.</p>
+            
+            <div id="foire-slots" style="display: flex; flex-direction: column; gap: 1rem; flex-grow: 1;">
+                <!-- Rempli par le JavaScript -->
             </div>
         </section>
     </main>
@@ -214,25 +228,48 @@
     <div id="modal-invitation" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
         <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 400px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
             <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid var(--encre-noire); padding-bottom: 0.5rem; text-align: center;">Inviter un compagnon</h3>
-            
-            <div id="liste-amis-invitation" style="margin-top: 1rem; max-height: 250px; overflow-y: auto; padding-right: 0.5rem;">
-                <p style="text-align: center; color: #666; font-style: italic;">Chargement...</p>
-            </div>
-            
+            <div id="liste-amis-invitation" style="margin-top: 1rem; max-height: 250px; overflow-y: auto; padding-right: 0.5rem;"></div>
             <button id="fermer-modal-invitation" class="btn-action btn-danger" style="margin-top: 1.5rem; width: 100%;">Fermer</button>
         </div>
     </div>
-    <!-- PIED DE PAGE (FOOTER) -->
+
+    <!-- NOUVELLE MODALE : Choix pour la Foire -->
+    <div id="modal-foire" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500; justify-content: center; align-items: center;">
+        <div class="panel" style="background: var(--fond-parchemin, #f4ecd8); padding: 2rem; max-width: 450px; width: 90%; border: 1px solid var(--encre-noire); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <h3 style="font-family: 'Cinzel', serif; border-bottom: 1px solid #b8860b; padding-bottom: 0.5rem; text-align: center; color: #b8860b;">Ajouter à la Foire</h3>
+            
+            <input type="text" id="search-foire-input" placeholder="Rechercher une carte..." style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-top: 1rem; margin-bottom: 1rem; border: 1px solid var(--encre-noire); box-sizing: border-box;">
+            
+            <div id="liste-cartes-foire" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <p style="text-align: center; color: #666; font-style: italic;">Chargement...</p>
+            </div>
+            
+            <button id="fermer-modal-foire" class="btn-action btn-danger" style="margin-top: 1.5rem; width: 100%;">Fermer</button>
+        </div>
+    </div>
+
     <footer class="game-footer">
         <p>Créateurs du jeu : @Antoine Poullin & @Pierre Cailloux</p>
         <p>Développeur : @Aurélien GIGUERRE</p>
-        <p style="margin-top: 1rem;">
-            <a href="mentions-legales.html" style="font-size: 0.8rem; opacity: 0.8;">Mentions Légales & RGPD</a>
+        <p style="margin-top: 1rem; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+            <a href="mentions-legales.html" style="font-size: 0.85rem; opacity: 0.8;">Mentions Légales & RGPD</a>
+            <a href="bugs.html" style="font-size: 0.85rem; opacity: 0.9; color: #8b0000; font-weight: bold;">🐛 Signaler un Bug (Grimoire des Malédictions)</a>
         </p>
     </footer>
-    <!-- PocketBase SDK -->
+
+    <!-- SDK PocketBase & Auth -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
-    <script src="../js/auth.js?v=5"></script>
-    <script src="../js/deck.js?v=5"></script>
+    <script src="../js/auth/config.js"></script>
+    <script src="../js/auth/router.js"></script>
+    <script src="../js/auth/logout.js"></script>
+
+    <!-- Injection des modules Deck -->
+    <script src="../js/deck/state.js"></script>
+    <script src="../js/deck/foire.js"></script>
+    <script src="../js/deck/participants.js"></script>
+    <script src="../js/deck/invitations.js"></script>
+    <script src="../js/deck/slots.js"></script>
+    <script src="../js/deck/cartes.js"></script>
+    <script src="../js/deck/main.js"></script>
 </body>
 </html>
