@@ -55,6 +55,11 @@
         </p>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
-    <script src="../js/auth.js?v=2"></script>
+    <!-- Injection des modules Auth (remplace auth.js) -->
+    <script src="../js/auth/config.js"></script>
+    <script src="../js/auth/router.js"></script>
+    <script src="../js/auth/login.js"></script>
+    <script src="../js/auth/register.js"></script>
+    <script src="../js/auth/logout.js"></script>
 </body>
 </html>

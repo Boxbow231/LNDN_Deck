@@ -151,8 +151,19 @@
     </footer>
     <!-- SDK PocketBase -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
-    <script src="../js/auth.js?v=6"></script>
-    <script src="../js/accueil.js?v=6"></script>
+    <!-- Injection des modules Auth (remplace auth.js) -->
+    <script src="../js/auth/config.js"></script>
+    <script src="../js/auth/router.js"></script>
+    <script src="../js/auth/login.js"></script>
+    <script src="../js/auth/register.js"></script>
+    <script src="../js/auth/logout.js"></script>
+    
+    <!-- Injection des modules Accueil -->
+    <script src="../js/accueil/utils.js"></script>
+    <script src="../js/accueil/compte.js"></script>
+    <script src="../js/accueil/aventures.js"></script>
+    <script src="../js/accueil/invitations.js"></script>
+    <script src="../js/accueil/main.js"></script>
 </body>
 
 </html>

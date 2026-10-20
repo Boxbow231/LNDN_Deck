@@ -254,8 +254,19 @@
         <p style="margin-top: 1rem;"><a href="mentions-legales.html" style="font-size: 0.8rem; opacity: 0.8;">Mentions Légales & RGPD</a></p>
     </footer>
 
+    <!-- SDK PocketBase & Auth -->
     <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
-    <script src="../js/auth.js?v=6"></script>
-    <script src="../js/deck.js?v=6"></script>
+    <script src="../js/auth/config.js"></script>
+    <script src="../js/auth/router.js"></script>
+    <script src="../js/auth/logout.js"></script>
+
+    <!-- Injection des modules Deck -->
+    <script src="../js/deck/state.js"></script>
+    <script src="../js/deck/foire.js"></script>
+    <script src="../js/deck/participants.js"></script>
+    <script src="../js/deck/invitations.js"></script>
+    <script src="../js/deck/slots.js"></script>
+    <script src="../js/deck/cartes.js"></script>
+    <script src="../js/deck/main.js"></script>
 </body>
 </html>
