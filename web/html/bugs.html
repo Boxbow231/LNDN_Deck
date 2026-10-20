@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Nominés du Néombre - Bugs & Malédictions</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .bug-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+        @media (max-width: 768px) {
+            .bug-layout { grid-template-columns: 1fr; }
+        }
+        .bug-card {
+            border: 1px solid var(--encre-noire);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 3px;
+            border-left: 4px solid #8b0000;
+        }
+    </style>
+</head>
+<body>
+    <!-- EN-TÊTE -->
+    <header class="deck-header">
+        <a href="accueil.html" class="header-logo-link">
+            <img src="../image/logo_nomines.jpg" alt="Logo">
+        </a>
+        <h2 style="color: #8b0000;">Le Grimoire des Malédictions</h2>
+        <div class="header-action">
+            <a href="accueil.html" class="btn-action">← Retour</a>
+        </div>
+    </header>
+
+    <main class="bug-layout">
+        <!-- COLONNE GAUCHE : Avertissement et Formulaire -->
+        <section class="panel">
+            <div style="background-color: rgba(139, 0, 0, 0.1); border: 1px dashed #8b0000; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0; color: #8b0000; font-family: 'Cinzel', serif;">⚠️ Projet Étudiant en cours...</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 0;">
+                    Un sortilège a mal tourné ? Une carte a disparu dans le Néant ? 
+                    Ceci est un projet développé dans le cadre de mes études. Si vous trouvez un bug ou un problème d'ergonomie, merci de l'inscrire dans ce grimoire !
+                </p>
+                <p style="font-size: 0.9rem; font-weight: bold; margin-top: 0.8rem;">
+                    Vous pouvez aussi m'engirlander (gentiment) en MP sur Discord : <span style="color: #7289da;">zeldrox_</span> (ou Boxbow) ou sur le serveur des Nominés du Néombre.
+                </p>
+            </div>
+
+            <h3 style="font-family: 'Cinzel', serif; margin-bottom: 1rem;">Signaler une anomalie</h3>
+            <form id="form-bug" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-weight: bold; font-size: 0.85rem;">Quel est le problème ? (Titre court)</label>
+                    <input type="text" id="bug-titre" placeholder="Ex: Impossible d'ajouter une carte..." style="width: 100%; box-sizing: border-box; padding: 0.5rem; margin-top: 0.3rem;" required>
+                </div>
+                <div>
+                    <label style="font-weight: bold; font-size: 0.85rem;">Description détaillée</label>
+                    <textarea id="bug-desc" rows="4" placeholder="Que faisiez-vous quand c'est arrivé ?" style="width: 100%; box-sizing: border-box; padding: 0.5rem; margin-top: 0.3rem; font-family: 'Special Elite', monospace; background-color: transparent; border: 2px solid var(--encre-noire);" required></textarea>
+                </div>
+                <button type="submit" class="btn-action" style="background-color: #8b0000; color: white;">Inscrire dans le Grimoire</button>
+            </form>
+        </section>
+
+        <!-- COLONNE DROITE : Liste des bugs connus -->
+        <section class="panel">
+            <h3 style="font-family: 'Cinzel', serif; margin-top: 0;">Anomalies recensées</h3>
+            <div id="liste-bugs" style="overflow-y: auto; flex-grow: 1; padding-right: 0.5rem;">
+                <p style="text-align: center; font-style: italic;">Consultation des archives en cours...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="game-footer">
+        <p>Créateurs du jeu : @Antoine Poullin & @Pierre Cailloux</p>
+        <p>Développeur : @Aurélien GIGUERRE</p>
+    </footer>
+
+    <!-- SDK PocketBase & Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
+    <script src="../js/auth/config.js"></script>
+    <script src="../js/auth/router.js"></script>
+    
+    <!-- Script dédié à la page des bugs -->
+    <script src="../js/bugs.js"></script>
+</body>
+</html>
