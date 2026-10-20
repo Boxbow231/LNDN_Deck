@@ -59,11 +59,11 @@ async function chargerAventures() {
 }
 
 window.modifierAventure = async function(aventureId, ancienTitre) {
-    const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure (24 caractères max) :", ancienTitre);
+    const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure (36 caractères max) :", ancienTitre);
     if (!nouveauTitre || nouveauTitre.trim() === "" || nouveauTitre.trim() === ancienTitre) return;
     
-    if (nouveauTitre.trim().length > 24) {
-        alert("Le nom est trop long ! (Maximum 24 caractères)");
+    if (nouveauTitre.trim().length > 36) {
+        alert("Le nom est trop long ! (Maximum 36 caractères)");
         return;
     }
 
@@ -110,8 +110,8 @@ if (createForm) {
         const titre = titreInput.value.trim();
         if (!titre) return;
         
-        if (titre.length > 24) {
-            alert("Le nom de l'aventure est trop long (maximum 24 caractères).");
+        if (titre.length > 36) {
+            alert("Le nom de l'aventure est trop long (maximum 36 caractères).");
             return;
         }
 
