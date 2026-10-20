@@ -165,6 +165,19 @@
         padding: 0.4rem 0.8rem !important;
         font-size: 0.85rem !important; 
     }
+    /* 9. Forcer l'empilement des boutons "Mon Compte" et "Amis" sur la page d'accueil */
+    div:has(> #btn-mon-compte) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.6rem !important;
+    }
+    
+    div:has(> #btn-mon-compte) > * {
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
 }
 
 /* =======================================================

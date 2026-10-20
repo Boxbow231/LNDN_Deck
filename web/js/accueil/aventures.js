@@ -46,7 +46,8 @@ async function chargerAventures() {
                     <small style="color: var(--gris-dessin);">Créée le ${new Date(av.created).toLocaleDateString('fr-FR')}</small>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                    <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.35rem 0.6rem; font-size: 0.75rem; margin-top: 0; white-space: nowrap; letter-spacing: 0.5px;">VOIR MON DECK</button>
+                    <!-- LE BOUTON A ÉTÉ MODIFIÉ ICI -->
+                    <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.4rem 0.6rem; font-size: 0.75rem; margin-top: 0; line-height: 1.3; letter-spacing: 0.5px; text-align: center;">VOIR<br>MON<br>DECK</button>
                     <div class="action-menu-container">
                         <button type="button" class="btn-dots" onclick="toggleMenu(event, '${av.id}')">⋮</button>
                         <div id="menu-${av.id}" class="dropdown-menu">${menuActions}</div>
