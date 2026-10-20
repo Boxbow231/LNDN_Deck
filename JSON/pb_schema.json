@@ -202,8 +202,8 @@
       "duration": 180
     },
     "verificationTemplate": {
-      "subject": "Verify your {APP_NAME} email",
-      "body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p><i>If you didn't recently register, please ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>"
+      "subject": "[Les Nominés du Néombre] Valide ton inscription",
+      "body": "<p>Salutations,</p>\n<p>Merci de rejoindre l'aventure des <strong>Nominés du Néombre</strong> !</p>\n<p>Avant de pouvoir t'enfoncer dans les ténèbres, tu dois prouver que tu n'es pas une illusion. Clique sur le bouton ci-dessous pour valider ton compte :</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\" style=\"background-color: #8b0000; color: white; padding: 10px 15px; text-decoration: none; border-radius: 3px; display: inline-block;\">Valider mon inscription</a>\n</p>\n<p><i>Si tu n'as jamais demandé à rejoindre cette quête, ignore simplement ce message.</i></p>\n<p>\n  Que les Ombres te soient favorables,<br/>\n  Le Développeur du Néombre\n</p>"
     },
     "resetPasswordTemplate": {
       "subject": "Reset your {APP_NAME} password",
@@ -551,6 +551,17 @@
         "required": false,
         "system": false,
         "type": "relation"
+      },
+      {
+        "help": "",
+        "hidden": false,
+        "id": "json3569544361",
+        "maxSize": 0,
+        "name": "foire",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
       },
       {
         "hidden": false,
@@ -1067,6 +1078,125 @@
         "required": false,
         "system": false,
         "type": "number"
+      },
+      {
+        "hidden": false,
+        "id": "autodate2990389176",
+        "name": "created",
+        "onCreate": true,
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "id": "autodate3332085495",
+        "name": "updated",
+        "onCreate": true,
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      }
+    ],
+    "indexes": [],
+    "system": false
+  },
+  {
+    "id": "pbc_699353301",
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "@request.auth.username = \"Boxbow\"",
+    "deleteRule": "",
+    "name": "maledictions",
+    "type": "base",
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "help": "",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "",
+        "hidden": false,
+        "id": "text4286007220",
+        "max": 0,
+        "min": 0,
+        "name": "titre",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "",
+        "hidden": false,
+        "id": "text1843675174",
+        "max": 0,
+        "min": 0,
+        "name": "description",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "",
+        "hidden": false,
+        "id": "text89829696",
+        "max": 0,
+        "min": 0,
+        "name": "auteur",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "help": "",
+        "hidden": false,
+        "id": "text1605820103",
+        "max": 0,
+        "min": 0,
+        "name": "reponse",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "help": "",
+        "hidden": false,
+        "id": "bool1977407267",
+        "name": "resolu",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "bool"
       },
       {
         "hidden": false,
