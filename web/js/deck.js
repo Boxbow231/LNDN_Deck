@@ -18,6 +18,10 @@ let mesDroits = "spectateur";
 let createurAventureId = null;
 let monParticipantId = null;
 
+// FOIRE DE FARCIMINIS
+let foireCartes = [null, null, null];
+let slotFoireEnCours = null;
+
 function normaliserIdUtilisateur(val) {
     if (!val) return '';
     if (typeof val === 'string') return val;
@@ -50,6 +54,184 @@ const searchInput = document.getElementById('search-input');
 const modalInvitation = document.getElementById('modal-invitation');
 const listeAmisInvitation = document.getElementById('liste-amis-invitation');
 const btnFermerModal = document.getElementById('fermer-modal-invitation');
+
+// Nouveaux éléments DOM Foire
+const foireSlotsContainer = document.getElementById('foire-slots');
+const modalFoire = document.getElementById('modal-foire');
+const searchFoireInput = document.getElementById('search-foire-input');
+const listeCartesFoireEl = document.getElementById('liste-cartes-foire');
+const fermerModalFoireBtn = document.getElementById('fermer-modal-foire');
+
+// ==========================================
+// FONCTIONS DE LA FOIRE DE FARCIMINIS
+// ==========================================
+
+function extraireFoireDeAventure(aventureRecord) {
+    let f = aventureRecord.foire;
+    if (!Array.isArray(f)) {
+        return [null, null, null];
+    }
+    while (f.length < 3) f.push(null);
+    return f.slice(0, 3);
+}
+
+function afficherFoire() {
+    if (!foireSlotsContainer) return;
+    foireSlotsContainer.innerHTML = '';
+
+    for (let i = 0; i < 3; i++) {
+        const cote = foireCartes[i];
+        
+        if (!cote) {
+            // SLOT VIDE
+            const div = document.createElement('div');
+            div.className = 'foire-slot';
+            div.innerHTML = '<div class="foire-slot-plus">+</div>';
+            
+            if (mesDroits !== 'spectateur') {
+                div.onclick = () => ouvrirModalFoire(i);
+            } else {
+                div.style.cursor = 'not-allowed';
+                div.title = "Mode Spectateur";
+            }
+            foireSlotsContainer.appendChild(div);
+        } else {
+            // SLOT REMPLI
+            const carte = toutesLesCartes.find(c => c.cote === cote);
+            if (!carte) continue;
+
+            const div = document.createElement('div');
+            div.className = 'card-item';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'stretch';
+            div.style.borderColor = '#b8860b';
+            div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            
+            let boutonsHtml = `<button class="btn-action" onclick="ajouterAuDeckDepuisFoire('${carte.cote}', ${i})" style="flex: 1; padding: 0.3rem;">Ajouter au deck</button>`;
+            
+            if (mesDroits !== 'spectateur') {
+                boutonsHtml += `<button class="btn-action btn-danger" onclick="retirerCarteFoire(${i})" style="padding: 0.3rem;" title="Retirer de la Foire">✖</button>`;
+            }
+
+            div.innerHTML = `
+                <div class="card-details" style="width: 100%;">
+                    <h4><span class="card-badge" style="background-color: #b8860b;">${carte.cote}</span> ${carte.nom}</h4>
+                    <p><strong>Effet :</strong> ${carte.effet || 'Aucun'}</p>
+                    <p style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem;">
+                        <small style="color: #666;">Zone : ${carte.zone || 'Inconnue'}</small>
+                        <strong style="color: #8b0000; font-size: 0.9rem;">Val: ${carte.valeur || 0}</strong>
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    ${mesDroits === 'spectateur' ? '' : boutonsHtml}
+                </div>
+            `;
+            foireSlotsContainer.appendChild(div);
+        }
+    }
+}
+
+window.ouvrirModalFoire = function(index) {
+    slotFoireEnCours = index;
+    modalFoire.style.display = 'flex';
+    if (searchFoireInput) searchFoireInput.value = '';
+    
+    // CORRECTION ICI : On filtre uniquement les cartes de la Foire de Farciminis
+    const cartesDeLaFoire = toutesLesCartes.filter(c => c.zone && c.zone.toLowerCase().includes('foire'));
+    afficherCartesFoireModal(cartesDeLaFoire);
+};
+
+if (fermerModalFoireBtn) {
+    fermerModalFoireBtn.addEventListener('click', () => {
+        modalFoire.style.display = 'none';
+    });
+}
+
+if (searchFoireInput) {
+    searchFoireInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        // CORRECTION ICI : La recherche s'effectue uniquement sur les cartes de la Foire
+        const cartesDeLaFoire = toutesLesCartes.filter(c => c.zone && c.zone.toLowerCase().includes('foire'));
+        
+        if (!query) {
+            afficherCartesFoireModal(cartesDeLaFoire);
+            return;
+        }
+        const filtrees = cartesDeLaFoire.filter(c => {
+            return (c.nom || '').toLowerCase().includes(query) || 
+                   (c.effet || '').toLowerCase().includes(query) || 
+                   (c.cote || '').toLowerCase().includes(query);
+        });
+        afficherCartesFoireModal(filtrees);
+    });
+}
+
+function afficherCartesFoireModal(liste) {
+    if (!listeCartesFoireEl) return;
+    listeCartesFoireEl.innerHTML = '';
+    
+    if(liste.length === 0) {
+        listeCartesFoireEl.innerHTML = '<p style="text-align:center; font-style:italic;">Aucune carte trouvée.</p>';
+        return;
+    }
+
+    liste.forEach(carte => {
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.style.borderColor = '#b8860b';
+        div.innerHTML = `
+            <div class="card-details" style="width: 100%;">
+                <h4 style="color: #b8860b;"><span class="card-badge" style="background-color: #b8860b;">${carte.cote}</span> ${carte.nom}</h4>
+                <p style="font-size: 0.75rem;"><strong>Effet:</strong> ${carte.effet || 'Aucun'}</p>
+            </div>
+            <button class="btn-action" onclick="choisirCarteFoire('${carte.cote}')" style="padding: 0.3rem 0.6rem; background-color: #b8860b; border-color: #8b6508;">Choisir</button>
+        `;
+        listeCartesFoireEl.appendChild(div);
+    });
+}
+
+window.choisirCarteFoire = async function(cote) {
+    if(slotFoireEnCours === null) return;
+    foireCartes[slotFoireEnCours] = cote;
+    modalFoire.style.display = 'none';
+    afficherFoire();
+
+    try {
+        await pb.collection('aventures').update(aventureId, { foire: foireCartes }, { requestKey: null });
+    } catch(e) {
+        console.error(e);
+        alert("Erreur. Avez-vous bien créé la colonne JSON 'foire' dans la table aventures et débloqué l'Update rule ?");
+    }
+};
+
+window.retirerCarteFoire = async function(index) {
+    if(!confirm("Retirer cette carte commune de la Foire de Farciminis ?")) return;
+    foireCartes[index] = null;
+    afficherFoire();
+
+    try {
+        await pb.collection('aventures').update(aventureId, { foire: foireCartes }, { requestKey: null });
+    } catch(e) {
+        console.error(e);
+    }
+};
+
+// LIAISON ENTRE LE DECK ET LA FOIRE
+window.ajouterAuDeckDepuisFoire = async function(cote, indexFoire) {
+    const ajoutReussi = await window.ajouterAuDeck(cote);
+    
+    if (ajoutReussi) {
+        foireCartes[indexFoire] = null; 
+        afficherFoire(); 
+        
+        try {
+            await pb.collection('aventures').update(aventureId, { foire: foireCartes }, { requestKey: null });
+        } catch(e) {
+            console.error("Erreur lors de la mise à jour de la foire :", e);
+        }
+    }
+};
 
 // ==========================================
 // FONCTIONS D'AFFICHAGE DES PARTICIPANTS
@@ -206,6 +388,8 @@ async function initialiserPage() {
 
         const aventure = await pb.collection('aventures').getOne(aventureId, { requestKey: null });
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
+        
+        foireCartes = extraireFoireDeAventure(aventure);
 
         createurAventureId = aventure.createur; 
         const estCreateur = (userId === createurAventureId);
@@ -253,6 +437,7 @@ async function initialiserPage() {
         afficherCatalogue(toutesLesCartes);
         
         afficherInvites();
+        afficherFoire();
         abonnerTempsReelDeck();
 
     } catch (err) {
@@ -806,33 +991,33 @@ function rafraichirCatalogueAffichage() {
     }
 }
 
-async function ajouterAuDeck(cote) {
+window.ajouterAuDeck = async function(cote) {
     const currentUserId = pb.authStore.model?.id;
     if (currentUserId && currentUserId !== createurAventureId) {
         const monAcces = participantsAventure.find(p => normaliserIdUtilisateur(p.utilisateur) === currentUserId);
         if (!monAcces) {
             redirigerExpulsion();
-            return;
+            return false;
         }
     }
     if (mesDroits === 'spectateur') {
         alert("Mode lecture seule : vous n'avez pas l'autorisation de modifier ce deck.");
-        return;
+        return false;
     }
     if (!deckRecordActif) {
         alert("Veuillez sélectionner un joueur d'abord.");
-        return;
+        return false;
     }
 
     const carteTrouvee = toutesLesCartes.find(c => c.cote === cote);
-    if (!carteTrouvee) return;
+    if (!carteTrouvee) return false;
 
     const limite = parseInt(carteTrouvee.exemplaire) || 1;
     const utilisees = compteCartesUtilisees[cote] || 0;
 
     if (utilisees >= limite) {
         alert('Limite atteinte pour "' + carteTrouvee.nom + '" !\n\nCette carte est limitée à ' + limite + ' exemplaire(s) partagé(s) entre tous les héros de cette aventure.');
-        return; 
+        return false; 
     }
 
     cartesDuDeck.push(carteTrouvee);
@@ -840,9 +1025,11 @@ async function ajouterAuDeck(cote) {
     afficherDeck();
     rafraichirCatalogueAffichage();
     sauvegarderDeck();
+    
+    return true; 
 }
 
-async function retirerDuDeck(index) {
+window.retirerDuDeck = async function(index) {
     const currentUserId = pb.authStore.model?.id;
     if (currentUserId && currentUserId !== createurAventureId) {
         const monAcces = participantsAventure.find(p => normaliserIdUtilisateur(p.utilisateur) === currentUserId);
@@ -883,7 +1070,6 @@ async function executerSauvegardeDeck() {
         console.error("Erreur de sauvegarde :", err);
     } finally {
         sauvegardeEnCours = false;
-        // CORRECTION DU BUG DE SYNCHRONISATION
         timerSauvegardeDeck = null; 
     }
 }
@@ -1110,8 +1296,13 @@ async function abonnerTempsReelDeck() {
                 return;
             }
 
-            if (e.action === 'update' && e.record.titre) {
-                if (titreAventureEl) titreAventureEl.textContent = e.record.titre;
+            // GESTION DU TEMPS RÉEL DE LA FOIRE
+            if (e.action === 'update') {
+                if (e.record.titre && titreAventureEl) titreAventureEl.textContent = e.record.titre;
+                if (e.record.foire !== undefined) {
+                    foireCartes = extraireFoireDeAventure(e.record);
+                    afficherFoire();
+                }
             }
         });
 
