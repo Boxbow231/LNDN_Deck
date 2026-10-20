@@ -1,18 +1,14 @@
-// Ce script tourne côté SERVEUR (Backend). Il s'exécute après chaque ajout dans la table "maledictions".
-onRecordAfterCreateRequest((e) => {
-    
-    // 1. On récupère les données qui viennent d'être sauvegardées
+onRecordAfterCreate((e) => {
     const titre = e.record.get("titre");
     const description = e.record.get("description");
     const auteur = e.record.get("auteur");
 
-    // 2. On prépare l'e-mail
     const message = new mailer.Message({
         from: {
             address: $app.settings().meta.senderAddress,
             name: "Le Grimoire du Néombre",
         },
-        to: [{ address: "aurelien.a3g@gmail.com" }], // L'adresse qui reçoit l'alerte
+        to: [{ address: "aurelien.a3g@gmail.com" }],
         subject: "🐛 Nouveau Bug signalé : " + titre,
         html: `
             <div style="font-family: sans-serif; color: #333;">
@@ -28,12 +24,10 @@ onRecordAfterCreateRequest((e) => {
         `,
     });
 
-    // 3. On envoie l'e-mail !
     try {
         $app.newMailClient().send(message);
         console.log("Email de bug envoyé à Aurélien pour : " + titre);
     } catch (err) {
         console.error("Erreur lors de l'envoi de l'email de bug :", err);
     }
-
-}, "maledictions"); // <-- Le nom de la collection à surveiller
+}, "maledictions");
