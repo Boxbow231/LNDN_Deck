@@ -23,10 +23,11 @@ if (registerForm) {
                 "password": password,
                 "passwordConfirm": passwordConfirm
             };
-            
             await pb.collection('users').create(data);
+
+            await pb.collection('users').requestVerification(email);
             
-            alert('Aventure créée avec succès ! Tu peux maintenant te connecter.');
+            alert('Aventure créée avec succès ! Un e-mail a été envoyé aux Ombres. Va cliquer sur le lien pour valider ton compte (vérifie tes spams).');
             window.location.href = 'connexion.html';
             
         } catch (error) {
@@ -36,7 +37,7 @@ if (registerForm) {
             if (error?.response?.data) {
                 detailStr = Object.entries(error.response.data).map(([k, v]) => k + ": " + (v.message || v)).join(", ");
             }
-            alert("Impossible de créer l'aventure : " + (detailStr || msg || "Erreur de connexion à la base de données."));
+            alert("Impossible de créer l'aventure : " + (detailStr || msg || "Erreur de connexion."));
         }
     });
 }
