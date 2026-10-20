@@ -1,9 +1,9 @@
-onRecordAfterCreate((e) => {
+onRecordAfterCreateSuccess((e) => {
     const titre = e.record.get("titre");
     const description = e.record.get("description");
     const auteur = e.record.get("auteur");
 
-    const message = new mailer.Message({
+    const message = new MailerMessage({
         from: {
             address: $app.settings().meta.senderAddress,
             name: "Le Grimoire du Néombre",
@@ -30,4 +30,7 @@ onRecordAfterCreate((e) => {
     } catch (err) {
         console.error("Erreur lors de l'envoi de l'email de bug :", err);
     }
+
+    // Obligatoire pour finaliser le processus d'enregistrement
+    e.next();
 }, "maledictions");
