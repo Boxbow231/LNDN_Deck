@@ -42,25 +42,47 @@ window.afficherJoueurs = function() {
             
             const joueurUtilisateurId = normaliserIdUtilisateur(joueurSlot.utilisateur);
             const estCreateurMainSlot = (joueurUtilisateurId === createurAventureId && parseInt(joueurSlot.emplacement) === 1);
+            // Si c'est le créateur qui gère le slot, mais que ce n'est pas son slot principal (1), c'est un joueur fictif/sans compte
             const estSansCompte = (joueurUtilisateurId === createurAventureId && parseInt(joueurSlot.emplacement) !== 1);
             const estMonSlot = (joueurUtilisateurId === pb.authStore.model.id);
 
-            let afficherBoutonRenommer = false, afficherBoutonRetirer = false;
-            if (mesDroits === 'createur') { afficherBoutonRenommer = true; if (!estCreateurMainSlot) afficherBoutonRetirer = true; } 
-            else if (mesDroits === 'admin') { afficherBoutonRenommer = true; if (estSansCompte) afficherBoutonRetirer = true; } 
-            else if (mesDroits === 'deck') { if (estMonSlot) afficherBoutonRenommer = true; }
+            let afficherBoutonRenommer = false, afficherBoutonRetirer = false, afficherBoutonInviter = false, afficherBoutonAnnuler = false;
+            
+            if (mesDroits === 'createur' || mesDroits === 'admin') { 
+                afficherBoutonRenommer = true; 
+                if (!estCreateurMainSlot) {
+                    afficherBoutonRetirer = true; 
+                    // NOUVEAU : Si c'est un compte sans joueur lié, on permet l'invitation de remplacement
+                    if (estSansCompte) {
+                        if (invitationEnAttente) afficherBoutonAnnuler = true;
+                        else afficherBoutonInviter = true;
+                    }
+                }
+            } 
+            else if (mesDroits === 'deck') { 
+                if (estMonSlot) afficherBoutonRenommer = true; 
+            }
 
             let menuHtml = '';
-            if (afficherBoutonRenommer || afficherBoutonRetirer) {
+            if (afficherBoutonRenommer || afficherBoutonRetirer || afficherBoutonInviter || afficherBoutonAnnuler) {
                 menuHtml += `<div class="action-menu-container" style="margin-left: auto;">
                     <button type="button" class="btn-dots" style="color: ${btnColor}; padding: 0.2rem 0.5rem;" onclick="toggleMenuJoueur(event, '${joueurSlot.id}')">⋮</button>
                     <div id="menu-joueur-${joueurSlot.id}" class="dropdown-menu">`;
+                
                 if (afficherBoutonRenommer) menuHtml += `<button type="button" class="dropdown-item" onclick="renommerJoueur(event, '${joueurSlot.id}', '${nomSafe}')">✏️ Renommer</button>`;
+                
+                // --- BOUTONS POUR LE REMPLACEMENT ---
+                if (afficherBoutonInviter) menuHtml += `<button type="button" class="dropdown-item" onclick="event.stopPropagation(); ouvrirModalInvitation(${i});">✉️ Remplacer par un ami</button>`;
+                if (afficherBoutonAnnuler) menuHtml += `<button type="button" class="dropdown-item danger" onclick="event.stopPropagation(); annulerInvitationSlot('${invitationEnAttente.id}');">❌ Annuler l'invitation en cours</button>`;
+                
                 if (afficherBoutonRetirer) menuHtml += `<button type="button" class="dropdown-item danger" onclick="supprimerJoueur(event, '${joueurSlot.id}', '${nomSafe}')">🗑️ Retirer</button>`;
                 menuHtml += '</div></div>';
             }
 
-            div.innerHTML = `<div><div style="font-size: 0.65rem; color: ${estActif ? '#dcd0b8' : '#888'};">Emplacement ${i}</div><div>${nom}</div><small style="font-size: 0.75rem;">${estActif ? '▶ Deck actif' : 'Cliquer pour voir'}</small></div>${menuHtml}`;
+            // Affiche un texte si une invitation de remplacement a été envoyée
+            let indicateurInv = invitationEnAttente ? `<span style="color: #b8860b; font-size: 0.65rem; margin-left: 0.3rem;">(Invitation envoyée)</span>` : '';
+
+            div.innerHTML = `<div><div style="font-size: 0.65rem; color: ${estActif ? '#dcd0b8' : '#888'};">Emplacement ${i} ${indicateurInv}</div><div>${nom}</div><small style="font-size: 0.75rem;">${estActif ? '▶ Deck actif' : 'Cliquer pour voir'}</small></div>${menuHtml}`;
         } else if (invitationEnAttente) {
             const nomInvite = invitationEnAttente.expand?.receveur?.username || invitationEnAttente.expand?.receveur?.name || 'un ami';
             div.className = 'player-item';
