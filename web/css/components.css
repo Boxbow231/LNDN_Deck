@@ -1,0 +1,179 @@
+/* =======================================================
+FORMULAIRES
+======================================================= */
+.form-group {
+    margin-bottom: 1.4rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.4rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--encre-noire);
+}
+
+.form-group input {
+    padding: 0.65rem 0.8rem;
+    border: 2px solid var(--encre-noire);
+    background-color: transparent;
+    color: var(--encre-noire);
+    font-family: 'Special Elite', monospace;
+    font-size: 0.95rem;
+    border-radius: 5px 2px 4px 3px;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-group input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(21, 21, 21, 0.15);
+    background-color: rgba(21, 21, 21, 0.02);
+}
+
+/* =======================================================
+BOUTONS
+======================================================= */
+button {
+    width: 100%;
+    padding: 0.9rem;
+    margin-top: 0.8rem;
+    background-color: var(--encre-noire);
+    color: var(--bg-parchment);
+    border: 2px solid var(--encre-noire);
+    border-radius: 3px 6px 2px 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0 var(--encre-noire);
+}
+
+button:hover {
+    background-color: transparent;
+    color: var(--encre-noire);
+    box-shadow: 4px 4px 0 var(--encre-noire);
+    transform: translate(-1px, -1px);
+}
+
+button:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+/* Boutons illustrés */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.2rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-icon img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.btn-icon:active {
+    transform: translateY(0);
+}
+
+/* Ajustements spécifiques de boutons */
+#btn-rechercher {
+    margin-top: 0 !important;
+    width: auto !important;
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+    align-self: center;
+}
+
+#compte-pseudo {
+    text-transform: none;
+}
+
+/* =======================================================
+MENUS CONTEXTUELS (3 POINTS)
+======================================================= */
+.action-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.btn-dots {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0.2rem 0.6rem;
+    line-height: 1;
+    color: var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+.btn-dots:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--fond-parchemin, #f4ecd8);
+    border: 1px solid var(--encre-noire);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    min-width: 140px;
+    z-index: 100;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-item {
+    padding: 0.6rem 1rem;
+    text-align: left;
+    background: transparent;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--encre-noire);
+    box-shadow: none;
+    border-radius: 0;
+    width: 100%;
+}
+
+.dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.08);
+    transform: none;
+    box-shadow: none;
+}
+
+.dropdown-item.danger {
+    color: #8b0000;
+}
+
+.dropdown-item.danger:hover {
+    background: rgba(139, 0, 0, 0.1);
+}
