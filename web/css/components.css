@@ -177,3 +177,39 @@ MENUS CONTEXTUELS (3 POINTS)
 .dropdown-item.danger:hover {
     background: rgba(139, 0, 0, 0.1);
 }
+
+/* =======================================================
+   CORRECTIF DOUX POUR LES CARTES (PC ET MOBILE)
+   ======================================================= */
+
+/* Autorise les éléments de la carte (texte + bouton) à s'empiler si ça manque de place */
+.card-item {
+    display: flex;
+    flex-wrap: wrap; /* Le secret est là : on passe à la ligne si besoin */
+    gap: 0.5rem;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Le texte de la carte prend toute la place restante */
+.card-details {
+    flex: 1;
+    min-width: 120px; /* Ne rétrécit pas plus que ça */
+}
+
+/* Le bouton garde sa taille normale mais peut s'aplatir si nécessaire */
+.card-item button {
+    flex-shrink: 0; /* Ne l'écrase pas trop vite */
+    width: auto !important; /* Retire le 100% de largeur */
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* Le titre principal peut rétrécir proprement */
+.deck-header h2 {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
