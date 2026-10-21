@@ -1,0 +1,132 @@
+/* =======================================================
+VERSION MOBILE (S'active si l'écran fait moins de 768px)
+======================================================= */
+@media (max-width: 768px) {
+/* 1. Réduire les marges et les boîtes pour gagner de la place */
+    .container, .auth-container, .panel {
+    padding: 1rem !important;
+    margin: 0.5rem auto !important;
+    width: 95% !important;
+    box-sizing: border-box;
+    }
+
+    /* 2. Casser les colonnes (ex: Page Amis) pour les mettre l'une sous l'autre */
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* 4. Réduire la taille des grands textes */
+    h1 { font-size: 1.8rem !important; }
+    h2 { font-size: 1.3rem !important; }
+
+    /* 5 & 6. Adapter les listes (Amis, Cartes) */
+    .player-item, .card-item, div[style*="justify-content: space-between"] {
+        flex-direction: row !important; 
+        align-items: baseline !important; 
+        gap: 0.5rem !important;
+    }
+
+    .player-item button, .card-item button, div[style*="justify-content: space-between"] button {
+        width: auto !important; 
+        padding: 0.4rem 0.8rem !important; 
+        font-size: 0.8rem !important;
+        margin-top: 0 !important; 
+        flex-shrink: 0; 
+    }
+
+    .player-item button, .card-item button {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        align-self: center !important;
+    }
+
+    /* 7. Centrer le logo et réduire sa taille */
+    .game-logo {
+        max-width: 180px !important;
+        margin: 0 auto;
+        display: block;
+    }
+
+    /* 8. Adapter l'en-tête pour Mobile (Bouton Amis sous le compte) */
+    .deck-header {
+        flex-direction: column !important; 
+        align-items: center !important; 
+        padding: 0.8rem !important; 
+        gap: 0.8rem !important; 
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-logo-link, .header-action {
+        width: 100% !important; 
+        min-width: 0 !important;
+        text-align: center !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    .header-logo-link img {
+        max-height: 35px; 
+    }
+
+    .deck-header h2 {
+        font-size: 0.95rem !important; 
+        flex-grow: 1; 
+        text-align: center;
+        min-width: 0 !important; 
+        word-wrap: break-word !important;
+        line-height: 1.2;
+    }
+
+    .header-action .btn-action {
+        width: auto !important; 
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.85rem !important; 
+    }
+
+    /* 9. Forcer l'empilement des boutons "Mon Compte" et "Amis" */
+    div:has(> #btn-mon-compte) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.6rem !important;
+    }
+
+    div:has(> #btn-mon-compte) > * {
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+}
+
+/* =======================================================
+VERSION ULTRA-MOBILE (Galaxy Z-Fold, < 400px)
+======================================================= */
+@media (max-width: 400px) {
+    .header-action .btn-action {
+    font-size: 0 !important;
+    padding: 0.3rem 0.6rem !important;
+    }
+
+    .header-action .btn-action::after {
+        content: "Retour"; 
+        font-size: 0.75rem;
+    }
+
+    .header-logo-link img {
+        max-height: 25px !important;
+    }
+
+    #recherche-pseudo {
+        font-size: 0.75rem !important; 
+        padding: 0.3rem 0.5rem !important; 
+    }
+
+    #btn-rechercher {
+        font-size: 0.75rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+
+}

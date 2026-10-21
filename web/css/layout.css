@@ -1,0 +1,99 @@
+/* =======================================================
+LE CONTENEUR PRINCIPAL
+======================================================= */
+.auth-container {
+    background-color: var(--parchment-light);
+    padding: 3rem 2rem 2.5rem;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+    box-shadow:
+    3px 5px 15px rgba(0, 0, 0, 0.2),
+    inset 0 0 30px rgba(139, 115, 85, 0.15);
+    border: 2px solid var(--encre-noire);
+    outline: 1px solid var(--encre-noire);
+    outline-offset: -5px;
+    margin: 10vh auto auto auto;
+    box-sizing: border-box;
+}
+
+.auth-container::before {
+    content: "📜";
+    font-size: 1.2rem;
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    opacity: 0.7;
+}
+
+/* =======================================================
+EN-TÊTE (HEADER)
+======================================================= */
+.deck-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 2rem;
+    background-color: var(--fond-parchemin, #f4ecd8);
+    border-bottom: 2px solid var(--encre-noire);
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.header-logo-link {
+    display: flex;
+    align-items: center;
+    width: 250px;
+    text-decoration: none;
+}
+
+.header-logo-link img {
+    max-height: 55px;
+    width: auto;
+}
+
+.deck-header h2 {
+    font-family: 'Cinzel', serif;
+    margin: 0;
+    font-size: 1.6rem;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.header-action {
+    width: 250px;
+    text-align: right;
+}
+
+.header-action .btn-action {
+    text-decoration: none;
+    padding: 0.4rem 1rem;
+    font-size: 0.9rem;
+    margin: 0;
+    display: inline-block;
+}
+
+/* =======================================================
+PIED DE PAGE (FOOTER)
+======================================================= */
+.game-footer {
+    text-align: center;
+    padding: 2rem 1rem 1rem 1rem;
+    margin-top: 4rem;
+    border-top: 1px solid rgba(21, 21, 21, 0.2);
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--encre-noire);
+    width: 100%;
+    box-sizing: border-box;
+    opacity: 0.9;
+}
+
+.game-footer p {
+    margin: 0.3rem 0;
+    font-style: normal;
+    color: var(--encre-noire);
+    letter-spacing: 0.5px;
+}

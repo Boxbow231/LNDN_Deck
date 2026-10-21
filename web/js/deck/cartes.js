@@ -8,7 +8,10 @@ window.selectionnerJoueur = async function(joueurId) {
     if (!joueurActif) {
         cartesDuDeck = []; deckRecordActif = null;
         if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Aucun héros sélectionné';
-        afficherDeck(); afficherJoueurs(); return;
+        afficherDeck(); 
+        afficherJoueurs(); 
+        rafraichirCatalogueAffichage(); // Met à jour le catalogue
+        return;
     }
     afficherJoueurs();
     if (deckTitreJoueurEl) deckTitreJoueurEl.textContent = 'Deck : ' + (joueurActif.nom_provisoire || 'Héros');
@@ -21,6 +24,7 @@ window.selectionnerJoueur = async function(joueurId) {
         const cotesEnregistrees = Array.isArray(deckRecordActif.cartes) ? deckRecordActif.cartes : [];
         cartesDuDeck = cotesEnregistrees.map(cote => toutesLesCartes.find(c => c.cote === cote)).filter(Boolean);
         afficherDeck();
+        rafraichirCatalogueAffichage(); // Met à jour les boutons grisés selon le héros
     } catch (err) { console.error(err); }
 };
 
@@ -68,12 +72,37 @@ window.afficherCatalogue = function(liste) {
     if (liste.length === 0) { catalogueListeEl.innerHTML = '<p style="text-align: center; font-style: italic;">Aucune carte trouvée.</p>'; return; }
     
     const isSpectateur = (mesDroits === 'spectateur');
+    
     liste.forEach(carte => {
         const limite = parseInt(carte.exemplaire) || 1;
         const utilisees = compteCartesUtilisees[carte.cote] || 0;
         const dispo = limite - utilisees;
-        const btnDisabled = (dispo <= 0 || isSpectateur) ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : '';
-        const texteDispo = dispo > 0 ? `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>` : `<span style="color: #8b0000; font-weight: bold;">0/${limite} dispo</span>`;
+        
+        // --- NOUVEAU : VÉRIFICATION DU PROPRIÉTAIRE DU DECK ---
+        let isRestricted = false;
+        const matchDeck = carte.cote.match(/^D(\d)/i); // Cherche D1, D2, D3, D4 au début de la cote
+        if (matchDeck && joueurActif) {
+            const numeroDeckAutorise = parseInt(matchDeck[1]);
+            if (parseInt(joueurActif.emplacement) !== numeroDeckAutorise) {
+                isRestricted = true; // Ce n'est pas le bon joueur pour cette carte
+            }
+        }
+
+        let btnDisabled = '';
+        let texteDispo = '';
+
+        if (isRestricted) {
+            btnDisabled = 'disabled style="opacity:0.4; cursor:not-allowed; background-color: #555;"';
+            texteDispo = `<span style="color: #8b0000; font-weight: bold; font-size: 0.75rem;">Mauvais Emplacement</span>`;
+        } else if (dispo <= 0) {
+            btnDisabled = 'disabled style="opacity:0.5; cursor:not-allowed;"';
+            texteDispo = `<span style="color: #8b0000; font-weight: bold;">0/${limite} dispo</span>`;
+        } else if (isSpectateur) {
+            btnDisabled = 'disabled style="opacity:0.5; cursor:not-allowed;"';
+            texteDispo = `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>`;
+        } else {
+            texteDispo = `<span style="color: #2e8b57; font-weight: bold;">${dispo}/${limite} dispo</span>`;
+        }
 
         const item = document.createElement('div');
         item.className = 'card-item';
@@ -99,10 +128,21 @@ window.rafraichirCatalogueAffichage = function() {
 
 window.ajouterAuDeck = async function(cote) {
     if (mesDroits === 'spectateur') { alert("Mode lecture seule."); return false; }
-    if (!deckRecordActif) { alert("Sélectionnez un joueur d'abord."); return false; }
+    if (!deckRecordActif || !joueurActif) { alert("Sélectionnez un joueur d'abord."); return false; }
 
     const carteTrouvee = toutesLesCartes.find(c => c.cote === cote);
     if (!carteTrouvee) return false;
+    
+    // --- NOUVEAU : SÉCURITÉ SUPPLÉMENTAIRE AU CLIC ---
+    const matchDeck = cote.match(/^D(\d)/i);
+    if (matchDeck) {
+        const numeroDeckAutorise = parseInt(matchDeck[1]);
+        if (parseInt(joueurActif.emplacement) !== numeroDeckAutorise) {
+            alert(`Sortilège instable ! Cette carte appartient au Deck ${numeroDeckAutorise}. Le héros actuel est sur l'emplacement ${joueurActif.emplacement}.`);
+            return false;
+        }
+    }
+
     const limite = parseInt(carteTrouvee.exemplaire) || 1;
     const utilisees = compteCartesUtilisees[cote] || 0;
 
