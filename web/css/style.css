@@ -129,19 +129,22 @@
         display: block;
     }
 
-    /* 8. Adapter l'en-tête de la page Deck pour Mobile (Strict) */
+    /* 8. Adapter l'en-tête pour Mobile (Bouton Amis sous le compte) */
     .deck-header {
-        flex-direction: row; 
-        padding: 0.5rem; 
-        gap: 0.5rem;
+        flex-direction: column !important; /* Force l'affichage de haut en bas */
+        align-items: center !important; /* Centre parfaitement au milieu */
+        padding: 0.8rem !important; 
+        gap: 0.8rem !important; /* Espacement entre le pseudo et le bouton amis */
         width: 100% !important;
         box-sizing: border-box !important;
     }
 
     .header-logo-link, .header-action {
-        width: auto !important; 
+        width: 100% !important; 
         min-width: 0 !important;
-        flex-shrink: 1 !important; /* Autorise le rétrécissement sur les petits écrans */
+        text-align: center !important;
+        display: flex;
+        justify-content: center;
     }
 
     .header-logo-link img {
@@ -153,14 +156,27 @@
         flex-grow: 1; 
         text-align: center;
         min-width: 0 !important; 
-        word-wrap: break-word !important; /* Permet au texte de se tordre si besoin */
+        word-wrap: break-word !important;
         line-height: 1.2;
     }
     
     .header-action .btn-action {
         width: auto !important; 
-        padding: 0.3rem 0.5rem;
-        font-size: 0.75rem; 
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.85rem !important; 
+    }
+    /* 9. Forcer l'empilement des boutons "Mon Compte" et "Amis" sur la page d'accueil */
+    div:has(> #btn-mon-compte) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.6rem !important;
+    }
+    
+    div:has(> #btn-mon-compte) > * {
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
     }
 }
 

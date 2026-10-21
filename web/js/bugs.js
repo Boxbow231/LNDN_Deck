@@ -83,9 +83,10 @@ async function chargerBugs() {
                 const styleBoutonResolu = !bug.resolu ? "background-color: #2e8b57; border-color: #2e8b57;" : "";
 
                 htmlBoutonsAdmin = `
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                         <button class="btn-action" onclick="repondreBug('${bug.id}')" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; width: auto;">💬 Répondre</button>
                         <button class="btn-action ${couleurBoutonResolu}" onclick="toggleBugResolu('${bug.id}', ${bug.resolu})" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; width: auto; ${styleBoutonResolu}">${texteBoutonResolu}</button>
+                        <button class="btn-action btn-danger" onclick="supprimerBug('${bug.id}')" style="padding: 0.2rem 0.6rem; font-size: 0.75rem; width: auto;">🗑️ Supprimer</button>
                     </div>
                 `;
             }
@@ -118,10 +119,7 @@ async function chargerBugs() {
 // 3. Actions sur les bugs (avec double sécurité)
 window.repondreBug = async function(id) {
     const estAdmin = pb.authStore.isValid && (pb.authStore.model.username === 'Boxbow' || pb.authStore.model.name === 'Boxbow');
-    if (!estAdmin) {
-        alert("Seul le développeur peut répondre aux requêtes !");
-        return;
-    }
+    if (!estAdmin) return;
 
     const reponse = prompt("Entrez votre réponse (elle sera visible par tout le monde) :");
     if (reponse === null) return;
@@ -145,6 +143,22 @@ window.toggleBugResolu = async function(id, etatActuel) {
     } catch (err) {
         console.error(err);
         alert("Erreur lors du changement d'état.");
+    }
+}
+
+// Nouvelle action pour supprimer définitivement
+window.supprimerBug = async function(id) {
+    const estAdmin = pb.authStore.isValid && (pb.authStore.model.username === 'Boxbow' || pb.authStore.model.name === 'Boxbow');
+    if (!estAdmin) return;
+
+    if (!confirm("Es-tu sûr de vouloir purger ce bug définitivement du grimoire ?")) return;
+
+    try {
+        await pb.collection('maledictions').delete(id);
+        chargerBugs();
+    } catch (err) {
+        console.error(err);
+        alert("Erreur lors de la suppression. As-tu bien débloqué la règle 'Delete' dans PocketBase ?");
     }
 }
 

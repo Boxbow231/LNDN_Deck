@@ -39,14 +39,15 @@ async function chargerAventures() {
                 : `<button type="button" class="dropdown-item danger" onclick="quitterAventure('${av.id}', '${av.titre.replace(/'/g, "\\'")}')">🚪 Quitter l'aventure</button>`;
 
             card.innerHTML = `
-                <div style="flex-grow: 1; cursor: pointer;" onclick="ouvrirAventure('${av.id}')">
-                    <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin: 0 0 0.3rem 0;">
+                <div style="flex: 1; min-width: 0; padding-right: 1rem; cursor: pointer;" onclick="ouvrirAventure('${av.id}')">
+                    <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin: 0 0 0.3rem 0; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
                         ${av.titre} ${estCreateur ? '' : '<span style="font-size: 0.8rem; color: #666; font-weight: normal;">(Invité)</span>'}
                     </h3>
                     <small style="color: var(--gris-dessin);">Créée le ${new Date(av.created).toLocaleDateString('fr-FR')}</small>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.45rem 1rem; font-size: 0.85rem; margin-top: 0;">Voir mon deck</button>
+                <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+                    <!-- LE BOUTON A ÉTÉ MODIFIÉ ICI -->
+                    <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.4rem 0.6rem; font-size: 0.75rem; margin-top: 0; line-height: 1.3; letter-spacing: 0.5px; text-align: center;">VOIR<br>MON<br>DECK</button>
                     <div class="action-menu-container">
                         <button type="button" class="btn-dots" onclick="toggleMenu(event, '${av.id}')">⋮</button>
                         <div id="menu-${av.id}" class="dropdown-menu">${menuActions}</div>
@@ -58,8 +59,14 @@ async function chargerAventures() {
 }
 
 window.modifierAventure = async function(aventureId, ancienTitre) {
-    const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure :", ancienTitre);
+    const nouveauTitre = prompt("Entrez le nouveau nom de l'aventure (36 caractères max) :", ancienTitre);
     if (!nouveauTitre || nouveauTitre.trim() === "" || nouveauTitre.trim() === ancienTitre) return;
+    
+    if (nouveauTitre.trim().length > 36) {
+        alert("Le nom est trop long ! (Maximum 36 caractères)");
+        return;
+    }
+
     try {
         await pb.collection('aventures').update(aventureId, { titre: nouveauTitre.trim() });
         await chargerAventures();
@@ -102,6 +109,12 @@ if (createForm) {
         const titreInput = document.getElementById('aventure-nom');
         const titre = titreInput.value.trim();
         if (!titre) return;
+        
+        if (titre.length > 36) {
+            alert("Le nom de l'aventure est trop long (maximum 36 caractères).");
+            return;
+        }
+
         try {
             const userId = pb.authStore.model.id;
             const nouvelleAventure = await pb.collection('aventures').create({ titre: titre, createur: userId });
