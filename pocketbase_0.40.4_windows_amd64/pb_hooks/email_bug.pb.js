@@ -8,7 +8,7 @@ onRecordAfterCreateSuccess((e) => {
             address: $app.settings().meta.senderAddress,
             name: "Le Grimoire du Néombre",
         },
-        to: [{ address: "aurelien.a3g@gmail.com" }],
+        to: [{ address: "noreply.neombre@gmail.com" }],
         subject: "🐛 Nouveau Bug signalé : " + titre,
         html: `
             <div style="font-family: sans-serif; color: #333;">
