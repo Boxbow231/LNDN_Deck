@@ -11,9 +11,40 @@ API_URL = "http://127.0.0.1:8090/api/collections/cartes_butins/records"
 # .parent remonte dans "LNDN_Deck"
 BASE_DIR = Path(__file__).resolve().parent.parent
 TSV_FILE = BASE_DIR / "LNDN_carte" / "data NN table carte simple - butins.tsv"
+
 def to_int_or_none(val):
     val = val.strip()
     return int(float(val)) if val else None
+
+def vider_collection():
+    print("--- Nettoyage de la base de données (Drop) ---")
+    supprimes = 0
+    
+    while True:
+        # On récupère les cartes par lots de 500 pour aller plus vite
+        req = urllib.request.Request(f"{API_URL}?perPage=500", method="GET")
+        try:
+            with urllib.request.urlopen(req) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                items = data.get("items", [])
+                
+                if not items:
+                    break # Plus aucune carte à supprimer, on sort de la boucle
+                
+                # On supprime chaque carte trouvée
+                for item in items:
+                    id_carte = item["id"]
+                    delete_url = f"{API_URL}/{id_carte}"
+                    del_req = urllib.request.Request(delete_url, method="DELETE")
+                    urllib.request.urlopen(del_req)
+                    supprimes += 1
+                    print(f"Suppression en cours... ({supprimes})", end="\r")
+                    
+        except Exception as e:
+            print(f"\nErreur lors du nettoyage : {e}")
+            break
+            
+    print(f"\nNettoyage terminé ! {supprimes} anciennes cartes ont été effacées.\n")
 
 def importer_cartes():
     print(f"--- Lecture de {TSV_FILE} ---")
@@ -69,4 +100,5 @@ def importer_cartes():
     print(f"\nTerminé ! {reussies} cartes importées avec succès ({erreurs} échecs).")
 
 if __name__ == "__main__":
+    vider_collection()
     importer_cartes()
