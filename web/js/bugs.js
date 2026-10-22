@@ -146,7 +146,6 @@ window.toggleBugResolu = async function(id, etatActuel) {
     }
 }
 
-// Nouvelle action pour supprimer définitivement
 window.supprimerBug = async function(id) {
     const estAdmin = pb.authStore.isValid && (pb.authStore.model.username === 'Boxbow' || pb.authStore.model.name === 'Boxbow');
     if (!estAdmin) return;

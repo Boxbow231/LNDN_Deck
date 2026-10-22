@@ -66,20 +66,26 @@ window.expulserParticipant = async function(id, nom) {
             await chargerParticipants(); afficherInvites();
         } catch(e) { alert("Erreur d'exclusion."); }
     } else {
-        if (!confirm(`Passer ${nom} en mode Spectateur (perte du héros) ?`)) return;
+        if (!confirm(`Exclure ${nom} de l'aventure ?\n\nSon héros restera sauvegardé sur la table en tant que "Joueur Invité" (sans compte). Vous pourrez le donner à un autre ami plus tard.`)) return;
+        
         try {
             const targetUserId = normaliserIdUtilisateur(part.utilisateur || part.expand?.utilisateur);
             if (targetUserId) {
+                // 1. On cherche tous les héros (joueurs) que possédait cet utilisateur dans cette aventure
                 const joueursAssocies = await pb.collection('joueurs').getFullList({ filter: `aventure = "${aventureId}" && utilisateur = "${targetUserId}"`, requestKey: null });
+                
+                // 2. On change le propriétaire de ces héros : ils redeviennent la propriété du créateur de l'aventure
                 for (const j of joueursAssocies) {
-                    const decks = await pb.collection('decks').getFullList({ filter: `joueur = "${j.id}"`, requestKey: null });
-                    for (const d of decks) await pb.collection('decks').delete(d.id, { requestKey: null });
-                    await pb.collection('joueurs').delete(j.id, { requestKey: null });
-                    if (joueurActif && joueurActif.id === j.id) joueurActif = null;
+                    await pb.collection('joueurs').update(j.id, { utilisateur: createurAventureId }, { requestKey: null });
                 }
             }
+            // 3. On passe l'ami en spectateur (ou on peut le supprimer totalement, mais on le garde en spectateur par sécurité)
             try { await pb.collection('participants').update(id, { permission: 'spectateur' }, { requestKey: null }); } catch(eUpdate) {}
-            await chargerParticipants(); await chargerJoueurs(pb.authStore.model.id); afficherInvites();
+            
+            // 4. On rafraîchit l'affichage
+            await chargerParticipants(); 
+            await chargerJoueurs(pb.authStore.model.id); 
+            afficherInvites();
         } catch(e) { console.error(e); alert("Erreur d'exclusion."); }
     }
 };

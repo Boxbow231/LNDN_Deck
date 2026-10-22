@@ -26,7 +26,10 @@ window.afficherJoueurs = function() {
     joueursListeEl.innerHTML = '';
 
     for (let i = 1; i <= 4; i++) {
-        const joueurSlot = listeJoueurs.find(j => parseInt(j.emplacement) === i);
+        // CORRECTION DU BUG : S'il y a un "fantôme" et un "vrai joueur" sur le même emplacement, on garde le vrai joueur !
+        const tousLesSlots = listeJoueurs.filter(j => parseInt(j.emplacement) === i);
+        const joueurSlot = tousLesSlots.find(j => normaliserIdUtilisateur(j.utilisateur) !== createurAventureId) || tousLesSlots[0];
+        
         const invitationEnAttente = invitationsAventure.find(inv => parseInt(inv.emplacement) === i);
         const div = document.createElement('div');
         
@@ -52,7 +55,6 @@ window.afficherJoueurs = function() {
                 afficherBoutonRenommer = true; 
                 if (!estCreateurMainSlot) {
                     afficherBoutonRetirer = true; 
-                    // NOUVEAU : Si c'est un compte sans joueur lié, on permet l'invitation de remplacement
                     if (estSansCompte) {
                         if (invitationEnAttente) afficherBoutonAnnuler = true;
                         else afficherBoutonInviter = true;
@@ -71,7 +73,6 @@ window.afficherJoueurs = function() {
                 
                 if (afficherBoutonRenommer) menuHtml += `<button type="button" class="dropdown-item" onclick="renommerJoueur(event, '${joueurSlot.id}', '${nomSafe}')">✏️ Renommer</button>`;
                 
-                // --- BOUTONS POUR LE REMPLACEMENT ---
                 if (afficherBoutonInviter) menuHtml += `<button type="button" class="dropdown-item" onclick="event.stopPropagation(); ouvrirModalInvitation(${i});">✉️ Remplacer par un ami</button>`;
                 if (afficherBoutonAnnuler) menuHtml += `<button type="button" class="dropdown-item danger" onclick="event.stopPropagation(); annulerInvitationSlot('${invitationEnAttente.id}');">❌ Annuler l'invitation en cours</button>`;
                 
@@ -79,7 +80,6 @@ window.afficherJoueurs = function() {
                 menuHtml += '</div></div>';
             }
 
-            // Affiche un texte si une invitation de remplacement a été envoyée
             let indicateurInv = invitationEnAttente ? `<span style="color: #b8860b; font-size: 0.65rem; margin-left: 0.3rem;">(Invitation envoyée)</span>` : '';
 
             div.innerHTML = `<div><div style="font-size: 0.65rem; color: ${estActif ? '#dcd0b8' : '#888'};">Emplacement ${i} ${indicateurInv}</div><div>${nom}</div><small style="font-size: 0.75rem;">${estActif ? '▶ Deck actif' : 'Cliquer pour voir'}</small></div>${menuHtml}`;
