@@ -142,7 +142,7 @@ MENUS CONTEXTUELS (3 POINTS)
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     display: none;
     flex-direction: column;
-    min-width: 140px;
+    min-width: 180px; 
     z-index: 100;
 }
 

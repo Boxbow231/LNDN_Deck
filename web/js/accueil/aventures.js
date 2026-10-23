@@ -24,7 +24,7 @@ async function chargerAventures() {
 
         aventuresContainer.innerHTML = '';
         if (aventuresAffichees.length === 0) {
-            aventuresContainer.innerHTML = '<p style="text-align: center; font-style: italic; color: var(--gris-dessin);">Aucune aventure en cours. Lancez votre première quête ci-dessus.</p>';
+            aventuresContainer.innerHTML = '<p style="text-align: center; font-style: italic; color: var(--gris-dessin);">Aucune aventure en cours. Commencez votre première aventure ci-dessus.</p>';
             return;
         }
 
@@ -39,14 +39,13 @@ async function chargerAventures() {
                 : `<button type="button" class="dropdown-item danger" onclick="quitterAventure('${av.id}', '${av.titre.replace(/'/g, "\\'")}')">🚪 Quitter l'aventure</button>`;
 
             card.innerHTML = `
-                <div style="flex: 1; min-width: 0; padding-right: 1rem; cursor: pointer;" onclick="ouvrirAventure('${av.id}')">
+                <div style="flex: 1; min-width: 0; padding-right: 1rem;">
                     <h3 style="font-family: 'Cinzel', serif; font-size: 1.1rem; margin: 0 0 0.3rem 0; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">
                         ${av.titre} ${estCreateur ? '' : '<span style="font-size: 0.8rem; color: #666; font-weight: normal;">(Invité)</span>'}
                     </h3>
                     <small style="color: var(--gris-dessin);">Créée le ${new Date(av.created).toLocaleDateString('fr-FR')}</small>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                    <!-- LE BOUTON A ÉTÉ MODIFIÉ ICI -->
                     <button type="button" onclick="ouvrirAventure('${av.id}')" style="width: auto; padding: 0.4rem 0.6rem; font-size: 0.75rem; margin-top: 0; line-height: 1.3; letter-spacing: 0.5px; text-align: center;">VOIR<br>MON<br>DECK</button>
                     <div class="action-menu-container">
                         <button type="button" class="btn-dots" onclick="toggleMenu(event, '${av.id}')">⋮</button>
@@ -88,7 +87,7 @@ window.supprimerAventure = async function(aventureId, titre) {
 }
 
 window.quitterAventure = async function(aventureId, titre) {
-    if (!confirm(`Es-tu sûr de vouloir quitter l'aventure "${titre}" ? Ton héros et ton deck seront supprimés de cette quête.`)) return;
+    if (!confirm(`Es-tu sûr de vouloir quitter l'aventure "${titre}" ? Ton héros et ton deck seront supprimés de cette aventure.`)) return;
     try {
         const userId = pb.authStore.model.id;
         const joueur = await pb.collection('joueurs').getFirstListItem(`aventure = "${aventureId}" && utilisateur = "${userId}"`);
