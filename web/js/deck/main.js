@@ -106,7 +106,14 @@ async function initialiserPage() {
         const userId = pb.authStore.model.id;
         const aventure = await pb.collection('aventures').getOne(aventureId, { requestKey: null });
         if (titreAventureEl) titreAventureEl.textContent = aventure.titre;
+        
         foireCartes = window.extraireFoireDeAventure(aventure);
+        if (aventure.bannissement && Array.isArray(aventure.bannissement)) {
+            window.cartesBannies = aventure.bannissement;
+        } else {
+            window.cartesBannies = [];
+        }
+
         createurAventureId = aventure.createur; 
         const estCreateur = (userId === createurAventureId);
 
@@ -129,6 +136,10 @@ async function initialiserPage() {
         
         window.afficherInvites();
         window.afficherFoire();
+        if (typeof window.afficherBannissement === 'function') {
+            window.afficherBannissement();
+        }
+
         abonnerTempsReelDeck();
 
     } catch (err) { alert(`Erreur: ${err.message}`); }

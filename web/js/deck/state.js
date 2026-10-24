@@ -36,8 +36,10 @@ window.createurAventureId = null;
 window.monParticipantId = null;
 
 window.foireCartes = [null, null, null];
+window.cartesBannies = [];
 window.slotFoireEnCours = null;
 window.slotInvitationEnCours = null;
+window.bannissementListeEl = document.getElementById('bannissement-liste');
 
 const MAX_JOUEURS = 4;
 const DECKS_DE_BASE = {

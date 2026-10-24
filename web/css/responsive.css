@@ -99,6 +99,11 @@ VERSION MOBILE (S'active si l'écran fait moins de 768px)
         box-sizing: border-box !important;
     }
 
+    /* 10. Agrandir la zone de bannissement sur mobile */
+    #bannissement-liste {
+        min-height: 280px !important; /* Force la zone à avoir la place pour afficher au moins 2 ou 3 cartes */
+    }
+
 }
 
 /* =======================================================

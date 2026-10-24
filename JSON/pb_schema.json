@@ -564,6 +564,17 @@
         "type": "json"
       },
       {
+        "help": "",
+        "hidden": false,
+        "id": "json2423206040",
+        "maxSize": 0,
+        "name": "bannissement",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
+      },
+      {
         "hidden": false,
         "id": "autodate2990389176",
         "name": "created",
@@ -1108,7 +1119,7 @@
     "listRule": "",
     "viewRule": "",
     "createRule": "",
-    "updateRule": "@request.auth.username = \"Boxbow\"",
+    "updateRule": "",
     "deleteRule": "",
     "name": "maledictions",
     "type": "base",
