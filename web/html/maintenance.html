@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Nominés du Néombre - Maintenance en cours</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;800&family=Cormorant+Garamond:ital,wght@0,600;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-parchment: #e6dfcc;
+            --parchment-light: #f4eee1;
+            --encre-noire: #151515;
+            --bordeaux: #4a0e17;
+            --gris-dessin: #3a3a35;
+        }
+
+        html {
+            min-height: 100vh;
+            background-color: var(--bg-parchment);
+            background-image:
+                radial-gradient(circle at 30% 20%, rgba(0, 0, 0, 0.03) 0%, transparent 60%),
+                radial-gradient(circle at 80% 70%, rgba(139, 115, 85, 0.1) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        body {
+            margin: 0;
+            padding: 1rem;
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--encre-noire);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .maintenance-container {
+            background-color: var(--parchment-light);
+            padding: 3rem 2.2rem 2.5rem;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 540px;
+            margin: auto;
+            text-align: center;
+            box-sizing: border-box;
+            box-shadow:
+                3px 5px 15px rgba(0, 0, 0, 0.2),
+                inset 0 0 30px rgba(139, 115, 85, 0.15);
+            border: 2px solid var(--encre-noire);
+            outline: 1px solid var(--encre-noire);
+            outline-offset: -5px;
+        }
+
+        .game-logo {
+            max-width: 240px;
+            height: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--bordeaux);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 0.5rem 0 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid var(--encre-noire);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--encre-noire);
+            margin: 0.9rem 0;
+        }
+
+        .excuse-box {
+            margin: 1.6rem 0;
+            padding: 1rem 1.2rem;
+            background-color: rgba(74, 14, 23, 0.06);
+            border: 1px dashed var(--bordeaux);
+            border-radius: 4px;
+            font-style: italic;
+            color: var(--gris-dessin);
+            font-size: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 0.6rem;
+            padding: 0.45rem 1.1rem;
+            background-color: var(--encre-noire);
+            color: var(--bg-parchment);
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-radius: 3px;
+        }
+
+        .game-footer {
+            text-align: center;
+            padding: 1.5rem 1rem 0.5rem;
+            margin-top: 2rem;
+            border-top: 1px solid rgba(21, 21, 21, 0.2);
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: var(--encre-noire);
+            width: 100%;
+            box-sizing: border-box;
+            opacity: 0.85;
+        }
+
+        .game-footer p {
+            font-size: 0.8rem;
+            margin: 0.25rem 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="maintenance-container">
+        <a href="https://lesnominesduneombre.fr" target="_blank" rel="noopener noreferrer"
+            title="Retour au site officiel">
+            <img src="image/logo_nomines.jpg" alt="Les Nominés du Néombre" class="game-logo"
+                onerror="this.style.display='none'">
+        </a>
+
+        <h1>Site en cours de réparation</h1>
+
+        <p>
+            Le gestionnaire de decks subit actuellement une maintenance importante suite à un incident technique sur
+            notre base de données.
+        </p>
+
+        <div class="excuse-box">
+            Toutes nos excuses pour la gêne occasionnée. Nous reconstruisons actuellement une architecture plus solide
+            et fiable afin de sécuriser durablement vos aventures et vos decks.
+        </div>
+
+        <p style="font-size: 0.98rem; color: var(--gris-dessin);">
+            Merci pour votre patience et votre compréhension. Le Néombre rouvrira ses portes très bientôt.
+        </p>
+
+        <div class="status-badge">Intervention en cours</div>
+    </main>
+
+    <footer class="game-footer">
+        <p>Créateurs du jeu : Antoine Poullin &amp; Pierre Cailloux</p>
+        <p>Développeur : Aurélien GIGUERRE</p>
+    </footer>
+
+</body>
+
+</html>
